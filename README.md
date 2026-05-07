@@ -1,4 +1,4 @@
-# IGA reviewer-grade experiment pipeline
+# IGA experiment pipeline
 
 This repository is the runnable local pipeline for **Uncertainty-Gated Inhibitory Attention (IGA)** experiments.
 
