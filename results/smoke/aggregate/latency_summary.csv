@@ -1,0 +1,2 @@
+model_id,method,prompt_tokens,max_new_tokens,seed,latency_s,tokens_per_second,peak_memory_mb,generated_tokens
+hf-internal-testing/tiny-random-LlamaForCausalLM,vanilla,32,4,1,0.1901574160438031,21.03520379704041,1.970458984375,4.0

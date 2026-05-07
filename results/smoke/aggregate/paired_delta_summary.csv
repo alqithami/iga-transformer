@@ -1,0 +1,2 @@
+model_id,benchmark,baseline,method,mean_delta_accuracy,std_delta_accuracy,ci_low,ci_high,n_pairs
+hf-internal-testing/tiny-random-LlamaForCausalLM,SyntheticTruth,vanilla_mc,iga_mc,0.0,0.0,0.0,0.0,3

@@ -1,0 +1,14 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+hf-internal-testing/tiny-random-LlamaForCausalLM & SyntheticTruth & iga\_mc & 0.667 $\pm$ 0.000 & 0.333 $\pm$ 0.000 & 0.270 $\pm$ 0.000 & 0.268 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.152 $\pm$ 0.000 \\
+hf-internal-testing/tiny-random-LlamaForCausalLM & SyntheticTruth & vanilla\_mc & 0.667 $\pm$ 0.000 & 0.333 $\pm$ 0.000 & 0.270 $\pm$ 0.000 & 0.268 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.105 $\pm$ 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,4 @@
+model_id,benchmark,id,seed,baseline,method,baseline_correct,method_correct,delta_correct
+hf-internal-testing/tiny-random-LlamaForCausalLM,SyntheticTruth,synthetic-0,1,vanilla_mc,iga_mc,1.0,1.0,0.0
+hf-internal-testing/tiny-random-LlamaForCausalLM,SyntheticTruth,synthetic-1,1,vanilla_mc,iga_mc,0.0,0.0,0.0
+hf-internal-testing/tiny-random-LlamaForCausalLM,SyntheticTruth,synthetic-2,1,vanilla_mc,iga_mc,1.0,1.0,0.0

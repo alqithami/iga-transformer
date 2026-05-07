@@ -1,0 +1,23 @@
+{
+  "benchmark": "halueval",
+  "benchmark_counts": {
+    "HaluEval-QA": 100
+  },
+  "dev_frac": 0.2,
+  "halueval_config": "qa",
+  "ids_sha256": "bd84286993618770ae4d0867940d5325455b8e46899b6b49f8cff3a90a64d3cf",
+  "limit": 100,
+  "load_limit": 1200,
+  "n": 100,
+  "name": "halueval",
+  "out": "results/mistral_first_serious_20260507_110930/data/halueval_dev.jsonl",
+  "revision": null,
+  "role": "dev",
+  "rows_sha256": "86c04c787c69174f2be7b2212ee8b9bba1e82ea2405c5645eb729c25f3ca4213",
+  "source_split": "data",
+  "split_counts": {
+    "dev": 100
+  },
+  "split_seed": 13,
+  "train_frac": 0.6
+}

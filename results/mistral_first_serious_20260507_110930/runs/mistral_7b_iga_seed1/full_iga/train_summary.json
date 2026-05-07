@@ -1,0 +1,27 @@
+{
+  "checkpoint": "results/mistral_first_serious_20260507_110930/runs/mistral_7b_iga_seed1/full_iga/iga_modules.pt",
+  "config_sha256": "0947a6de6ecc3c82d306ffaf5e54781ed6572d9c0ff03425eb54c4d861107c40",
+  "dev_examples": 300,
+  "elapsed_s": 5422.562260866165,
+  "epochs": 1,
+  "output_dir": "results/mistral_first_serious_20260507_110930/runs/mistral_7b_iga_seed1/full_iga",
+  "package_versions": {
+    "accelerate": "1.13.0",
+    "cuda_available": false,
+    "datasets": "4.8.5",
+    "mps_available": true,
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "peft": "not_importable: ModuleNotFoundError",
+    "python": "3.12.9 | packaged by conda-forge | (main, Mar  4 2025, 22:44:42) [Clang 18.1.8 ]",
+    "sklearn": "1.8.0",
+    "torch": "2.11.0",
+    "transformers": "5.8.0"
+  },
+  "seed": 1,
+  "steps": 900,
+  "total_parameters": 7249478049,
+  "train_examples": 900,
+  "trainable_fraction": 0.00020063472020590982,
+  "trainable_parameters": 1454497
+}

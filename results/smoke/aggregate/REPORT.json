@@ -1,0 +1,22 @@
+{
+  "latency_files": [
+    "results/smoke/latency_vanilla.jsonl"
+  ],
+  "n_groups": 2,
+  "n_prediction_rows": 6,
+  "outputs": [
+    "summary_per_seed.csv",
+    "summary_by_model_benchmark_method.csv",
+    "calibration_bins.csv",
+    "paired_deltas_vs_vanilla.csv",
+    "paired_delta_summary.csv",
+    "main_results_table.tex",
+    "ablation_table.tex",
+    "latency_summary.csv",
+    "efficiency_table.tex"
+  ],
+  "prediction_files": [
+    "results/smoke/vanilla_mc.jsonl",
+    "results/smoke/iga_mc.jsonl"
+  ]
+}

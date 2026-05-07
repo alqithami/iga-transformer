@@ -1,0 +1,13 @@
+\begin{table}[t]
+\centering
+\caption{Generation latency and memory. Overhead is relative to vanilla for the same model, seed, and prompt length.}
+\label{tab:efficiency}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Model & Method & Prompt toks & Lat. s$\downarrow$ & Tok/s$\uparrow$ & Mem MB$\downarrow$ \\
+\midrule
+hf-internal-testing/tiny-random-LlamaForCausalLM & vanilla & 32 & 0.190 & 21.035 & 1.970 \\
+\bottomrule
+\end{tabular}
+\end{table}

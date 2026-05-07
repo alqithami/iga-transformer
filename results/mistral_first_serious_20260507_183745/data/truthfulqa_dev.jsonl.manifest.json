@@ -1,0 +1,23 @@
+{
+  "benchmark": "truthfulqa_mc",
+  "benchmark_counts": {
+    "TruthfulQA-MC1": 100
+  },
+  "dev_frac": 0.2,
+  "halueval_config": null,
+  "ids_sha256": "bcbc1d1a23215144e10a858fe30399be79b6964de3a28f8bd9af6b2679dbf5f2",
+  "limit": 100,
+  "load_limit": 1200,
+  "n": 100,
+  "name": "truthfulqa_mc",
+  "out": "results/mistral_first_serious_20260507_183745/data/truthfulqa_dev.jsonl",
+  "revision": null,
+  "role": "dev",
+  "rows_sha256": "dc7549509ee9b3744b4bdc5d9fe9f919dc4e5dc61fde4600379d87265b86b6dc",
+  "source_split": "validation",
+  "split_counts": {
+    "dev": 100
+  },
+  "split_seed": 13,
+  "train_frac": 0.6
+}
