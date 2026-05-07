@@ -1,0 +1,24 @@
+{
+  "benchmark": "synthetic",
+  "benchmark_counts": {
+    "SyntheticTruth": 4
+  },
+  "dev_frac": 0.2,
+  "halueval_config": null,
+  "ids_sha256": "6df5cc2842cd5729e559306e43d3c913f329e983a31bb9745a22796d88c86079",
+  "limit": null,
+  "load_limit": null,
+  "n": 4,
+  "name": "synthetic",
+  "out": "data/synthetic.jsonl",
+  "revision": null,
+  "role": "all",
+  "rows_sha256": "edabd60b1155a272ca784811c89bd3d82aad3d658e5f8f586faa045e9fc25f76",
+  "source_split": null,
+  "split_counts": {
+    "test": 3,
+    "train": 1
+  },
+  "split_seed": 1,
+  "train_frac": 0.6
+}

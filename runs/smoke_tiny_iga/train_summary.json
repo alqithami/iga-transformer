@@ -1,0 +1,27 @@
+{
+  "checkpoint": "runs/smoke_tiny_iga/iga_modules.pt",
+  "config_sha256": "be3fe4867c11c44200d6d454425f47f2b545b1c407257e997cf9a72bc09e0b2b",
+  "dev_examples": 4,
+  "elapsed_s": 0.9533820152282715,
+  "epochs": 1,
+  "output_dir": "runs/smoke_tiny_iga",
+  "package_versions": {
+    "accelerate": "1.13.0",
+    "cuda_available": false,
+    "datasets": "4.8.5",
+    "mps_available": true,
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "peft": "not_importable: ModuleNotFoundError",
+    "python": "3.12.9 | packaged by conda-forge | (main, Mar  4 2025, 22:44:42) [Clang 18.1.8 ]",
+    "sklearn": "1.8.0",
+    "torch": "2.11.0",
+    "transformers": "5.8.0"
+  },
+  "seed": 1,
+  "steps": 2,
+  "total_parameters": 1032451,
+  "train_examples": 2,
+  "trainable_fraction": 0.00017337384534471854,
+  "trainable_parameters": 179
+}
