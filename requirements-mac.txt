@@ -1,0 +1,17 @@
+torch>=2.3
+transformers>=4.46
+accelerate>=0.33
+datasets>=2.20
+evaluate>=0.4
+huggingface_hub>=0.24
+safetensors>=0.4
+sentencepiece>=0.2
+protobuf>=4.25
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+scipy>=1.12
+tqdm>=4.66
+pyyaml>=6.0
+matplotlib>=3.8
+psutil>=5.9
