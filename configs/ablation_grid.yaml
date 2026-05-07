@@ -1,0 +1,28 @@
+# Source-of-record ablation names used by iga_llm.ablations.
+default_ablation_names:
+  - ablate_full_iga
+  - ablate_no_uncertainty_gate
+  - ablate_no_inhibition
+  - ablate_constant_inhibition
+  - ablate_low_rank_dot
+  - ablate_early_layers
+  - ablate_middle_layers
+  - ablate_selected_heads_even
+  - ablate_inference_only
+full_suite:
+  - ablate_full_iga
+  - ablate_no_uncertainty_gate
+  - ablate_no_inhibition
+  - ablate_constant_inhibition
+  - ablate_low_rank_dot
+  - ablate_pair_mlp
+  - ablate_early_layers
+  - ablate_middle_layers
+  - ablate_all_layers
+  - ablate_selected_heads_even
+  - ablate_train_threshold
+  - ablate_rank_8
+  - ablate_rank_64
+  - ablate_gamma_0p5
+  - ablate_gamma_4
+  - ablate_inference_only
