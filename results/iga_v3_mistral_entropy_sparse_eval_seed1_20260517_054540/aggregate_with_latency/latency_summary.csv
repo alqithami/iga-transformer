@@ -1,0 +1,4 @@
+model_id,method,prompt_tokens,max_new_tokens,seed,latency_s,tokens_per_second,peak_memory_mb,generated_tokens
+mistralai/Mistral-7B-Instruct-v0.3,iga,256,32,1,76.74412255600328,0.5938997547012339,14009.97119140625,32.0
+mistralai/Mistral-7B-Instruct-v0.3,iga,512,32,1,137.35476898599882,0.24223860448044518,14011.03369140625,32.0
+mistralai/Mistral-7B-Instruct-v0.3,iga,1024,32,1,492.35009597232175,0.06527465457339572,14011.78515625,32.0

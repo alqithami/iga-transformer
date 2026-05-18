@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{Generation latency and memory. Overhead is relative to vanilla for the same model, seed, and prompt length.}
+\label{tab:efficiency}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Model & Method & Prompt toks & Lat. s$\downarrow$ & Tok/s$\uparrow$ & Mem MB$\downarrow$ \\
+\midrule
+Mistral-7B-Instruct-v0.3 & iga & 256 & 76.744 & 0.594 & 14009.971 \\
+Mistral-7B-Instruct-v0.3 & iga & 512 & 137.355 & 0.242 & 14011.034 \\
+Mistral-7B-Instruct-v0.3 & iga & 1024 & 492.350 & 0.065 & 14011.785 \\
+\bottomrule
+\end{tabular}
+\end{table}
