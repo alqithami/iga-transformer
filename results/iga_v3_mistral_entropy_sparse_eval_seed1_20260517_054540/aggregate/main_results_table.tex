@@ -1,0 +1,15 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+Mistral-7B-Instruct-v0.3 & FEVER & iga\_v3\_entropy\_sparse\_mc & 0.463 $\pm$ 0.000 & 0.537 $\pm$ 0.000 & 0.263 $\pm$ 0.000 & 0.310 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.429 $\pm$ 0.000 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & iga\_v3\_entropy\_sparse\_mc & 0.933 $\pm$ 0.000 & 0.067 $\pm$ 0.000 & 0.047 $\pm$ 0.000 & 0.057 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 2.265 $\pm$ 0.000 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & iga\_v3\_entropy\_sparse\_mc & 0.477 $\pm$ 0.000 & 0.523 $\pm$ 0.000 & 0.151 $\pm$ 0.000 & 0.245 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.891 $\pm$ 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

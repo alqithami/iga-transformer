@@ -1,0 +1,16 @@
+model_id,benchmark,baseline,method,mean_delta_accuracy,std_delta_accuracy,ci_low,ci_high,n_pairs
+mistralai/Mistral-7B-Instruct-v0.3,FEVER,vanilla_mc,iga_v2_lowrank_mc,0.13555555555555557,0.651397250873218,0.09299760183183867,0.17811350927927247,900
+mistralai/Mistral-7B-Instruct-v0.3,FEVER,vanilla_mc,iga_v3_entropy_sparse_mc,0.11333333333333333,0.6747888723864258,0.036973784058113815,0.18969288260855283,300
+mistralai/Mistral-7B-Instruct-v0.3,FEVER,vanilla_mc,self_consistency_mc,0.09666666666666666,0.6489402672995436,0.05426923586976315,0.13906409746357018,900
+mistralai/Mistral-7B-Instruct-v0.3,FEVER,vanilla_mc,semantic_entropy_mc,0.09666666666666666,0.6489402672995436,0.05426923586976315,0.13906409746357018,900
+mistralai/Mistral-7B-Instruct-v0.3,FEVER,vanilla_mc,temperature_mc,0.0,0.0,0.0,0.0,900
+mistralai/Mistral-7B-Instruct-v0.3,HaluEval-QA,vanilla_mc,iga_v2_lowrank_mc,0.3466666666666667,0.5271705488186086,0.31222485747718426,0.3811084758561491,900
+mistralai/Mistral-7B-Instruct-v0.3,HaluEval-QA,vanilla_mc,iga_v3_entropy_sparse_mc,0.3433333333333333,0.5714403168087376,0.2786687740692087,0.40799789259745795,300
+mistralai/Mistral-7B-Instruct-v0.3,HaluEval-QA,vanilla_mc,self_consistency_mc,0.15222222222222223,0.4059424491607786,0.12570064887705137,0.1787437955673931,900
+mistralai/Mistral-7B-Instruct-v0.3,HaluEval-QA,vanilla_mc,semantic_entropy_mc,0.15222222222222223,0.4059424491607786,0.12570064887705137,0.1787437955673931,900
+mistralai/Mistral-7B-Instruct-v0.3,HaluEval-QA,vanilla_mc,temperature_mc,0.0,0.0,0.0,0.0,900
+mistralai/Mistral-7B-Instruct-v0.3,TruthfulQA-MC1,vanilla_mc,iga_v2_lowrank_mc,0.08501118568232663,0.30967064430835045,0.056303224686568135,0.11371914667808512,447
+mistralai/Mistral-7B-Instruct-v0.3,TruthfulQA-MC1,vanilla_mc,iga_v3_entropy_sparse_mc,0.08053691275167785,0.29675676006075385,0.03288684109924827,0.12818698440410742,149
+mistralai/Mistral-7B-Instruct-v0.3,TruthfulQA-MC1,vanilla_mc,self_consistency_mc,0.19686800894854586,0.5616192461148077,0.1448031984530538,0.24893281944403792,447
+mistralai/Mistral-7B-Instruct-v0.3,TruthfulQA-MC1,vanilla_mc,semantic_entropy_mc,0.19686800894854586,0.5616192461148077,0.1448031984530538,0.24893281944403792,447
+mistralai/Mistral-7B-Instruct-v0.3,TruthfulQA-MC1,vanilla_mc,temperature_mc,0.0,0.0,0.0,0.0,447

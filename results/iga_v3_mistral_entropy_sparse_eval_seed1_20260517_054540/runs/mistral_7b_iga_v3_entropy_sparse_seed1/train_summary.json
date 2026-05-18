@@ -1,0 +1,29 @@
+{
+  "checkpoint": "results/iga_v3_mistral_entropy_sparse_eval_seed1_20260517_054540/runs/mistral_7b_iga_v3_entropy_sparse_seed1/iga_modules.pt",
+  "config_sha256": "56ad17ce914859e6e651c9666b3804369800df5623a3ebf7af01ba9e28e09d98",
+  "dev_examples": 758,
+  "elapsed_s": 10002.93573975563,
+  "epochs": 1,
+  "output_dir": "results/iga_v3_mistral_entropy_sparse_eval_seed1_20260517_054540/runs/mistral_7b_iga_v3_entropy_sparse_seed1",
+  "package_versions": {
+    "accelerate": "1.13.0",
+    "cuda_available": false,
+    "datasets": "4.8.5",
+    "mps_available": true,
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "peft": "not_importable: ModuleNotFoundError",
+    "python": "3.12.9 | packaged by conda-forge | (main, Mar  4 2025, 22:44:42) [Clang 18.1.8 ]",
+    "sklearn": "1.8.0",
+    "torch": "2.11.0",
+    "transformers": "5.8.0"
+  },
+  "risk_labels_computed": 2510,
+  "risk_loss_weight": 0.0,
+  "seed": 1,
+  "steps": 2510,
+  "total_parameters": 7295728044,
+  "train_examples": 2510,
+  "trainable_fraction": 0.006538688354650518,
+  "trainable_parameters": 47704492
+}

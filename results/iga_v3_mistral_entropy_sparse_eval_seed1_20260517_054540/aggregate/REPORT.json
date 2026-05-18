@@ -1,0 +1,21 @@
+{
+  "latency_files": [],
+  "n_groups": 3,
+  "n_prediction_rows": 749,
+  "outputs": [
+    "summary_per_seed.csv",
+    "summary_by_model_benchmark_method.csv",
+    "calibration_bins.csv",
+    "paired_deltas_vs_vanilla.csv",
+    "paired_delta_summary.csv",
+    "main_results_table.tex",
+    "ablation_table.tex",
+    "latency_summary.csv",
+    "efficiency_table.tex"
+  ],
+  "prediction_files": [
+    "results/iga_v3_mistral_entropy_sparse_eval_seed1_20260517_054540/predictions/mistral_7b_iga_v3_entropy_sparse_seed1_fever_eval_iga_mc.jsonl",
+    "results/iga_v3_mistral_entropy_sparse_eval_seed1_20260517_054540/predictions/mistral_7b_iga_v3_entropy_sparse_seed1_halueval_eval_iga_mc.jsonl",
+    "results/iga_v3_mistral_entropy_sparse_eval_seed1_20260517_054540/predictions/mistral_7b_iga_v3_entropy_sparse_seed1_truthfulqa_eval_iga_mc.jsonl"
+  ]
+}
