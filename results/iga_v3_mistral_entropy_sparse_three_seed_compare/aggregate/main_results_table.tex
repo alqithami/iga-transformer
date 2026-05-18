@@ -1,0 +1,30 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+Mistral-7B-Instruct-v0.3 & FEVER & iga\_v2\_lowrank\_mc & 0.486 $\pm$ 0.040 & 0.514 $\pm$ 0.040 & 0.231 $\pm$ 0.070 & 0.300 $\pm$ 0.030 & 1.000 $\pm$ 0.000 & 1.910 $\pm$ 0.086 \\
+Mistral-7B-Instruct-v0.3 & FEVER & iga\_v3\_entropy\_sparse\_mc & 0.450 $\pm$ 0.012 & 0.550 $\pm$ 0.012 & 0.272 $\pm$ 0.038 & 0.312 $\pm$ 0.021 & 1.000 $\pm$ 0.000 & 1.366 $\pm$ 0.126 \\
+Mistral-7B-Instruct-v0.3 & FEVER & self\_consistency\_mc & 0.447 $\pm$ 0.009 & 0.553 $\pm$ 0.009 & 0.371 $\pm$ 0.019 & 0.384 $\pm$ 0.016 & 1.000 $\pm$ 0.000 & 16.691 $\pm$ 2.042 \\
+Mistral-7B-Instruct-v0.3 & FEVER & semantic\_entropy\_mc & 0.447 $\pm$ 0.009 & 0.553 $\pm$ 0.009 & 0.274 $\pm$ 0.018 & 0.339 $\pm$ 0.014 & 1.000 $\pm$ 0.000 & 18.904 $\pm$ 3.032 \\
+Mistral-7B-Instruct-v0.3 & FEVER & temperature\_mc & 0.350 $\pm$ 0.000 & 0.650 $\pm$ 0.000 & 0.295 $\pm$ 0.000 & 0.317 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.896 $\pm$ 0.234 \\
+Mistral-7B-Instruct-v0.3 & FEVER & vanilla\_mc & 0.350 $\pm$ 0.000 & 0.650 $\pm$ 0.000 & 0.248 $\pm$ 0.000 & 0.288 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.038 $\pm$ 0.230 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & iga\_v2\_lowrank\_mc & 0.937 $\pm$ 0.020 & 0.063 $\pm$ 0.020 & 0.042 $\pm$ 0.008 & 0.054 $\pm$ 0.014 & 1.000 $\pm$ 0.000 & 3.398 $\pm$ 0.446 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & iga\_v3\_entropy\_sparse\_mc & 0.897 $\pm$ 0.033 & 0.103 $\pm$ 0.033 & 0.046 $\pm$ 0.011 & 0.075 $\pm$ 0.016 & 1.000 $\pm$ 0.000 & 2.159 $\pm$ 0.166 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & self\_consistency\_mc & 0.742 $\pm$ 0.002 & 0.258 $\pm$ 0.002 & 0.208 $\pm$ 0.003 & 0.228 $\pm$ 0.003 & 1.000 $\pm$ 0.000 & 12.967 $\pm$ 0.830 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & semantic\_entropy\_mc & 0.742 $\pm$ 0.002 & 0.258 $\pm$ 0.002 & 0.243 $\pm$ 0.015 & 0.248 $\pm$ 0.012 & 1.000 $\pm$ 0.000 & 14.125 $\pm$ 1.644 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & temperature\_mc & 0.590 $\pm$ 0.000 & 0.410 $\pm$ 0.000 & 0.161 $\pm$ 0.000 & 0.214 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.360 $\pm$ 0.189 \\
+Mistral-7B-Instruct-v0.3 & HaluEval-QA & vanilla\_mc & 0.590 $\pm$ 0.000 & 0.410 $\pm$ 0.000 & 0.139 $\pm$ 0.000 & 0.206 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.280 $\pm$ 0.249 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & iga\_v2\_lowrank\_mc & 0.481 $\pm$ 0.004 & 0.519 $\pm$ 0.004 & 0.148 $\pm$ 0.020 & 0.241 $\pm$ 0.003 & 1.000 $\pm$ 0.000 & 3.027 $\pm$ 0.423 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & iga\_v3\_entropy\_sparse\_mc & 0.472 $\pm$ 0.014 & 0.528 $\pm$ 0.014 & 0.135 $\pm$ 0.018 & 0.243 $\pm$ 0.004 & 1.000 $\pm$ 0.000 & 1.890 $\pm$ 0.028 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & self\_consistency\_mc & 0.593 $\pm$ 0.010 & 0.407 $\pm$ 0.010 & 0.250 $\pm$ 0.022 & 0.273 $\pm$ 0.023 & 1.000 $\pm$ 0.000 & 13.939 $\pm$ 0.688 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & semantic\_entropy\_mc & 0.593 $\pm$ 0.010 & 0.407 $\pm$ 0.010 & 0.237 $\pm$ 0.030 & 0.269 $\pm$ 0.024 & 1.000 $\pm$ 0.000 & 14.127 $\pm$ 1.259 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & temperature\_mc & 0.396 $\pm$ 0.000 & 0.604 $\pm$ 0.000 & 0.125 $\pm$ 0.000 & 0.240 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.245 $\pm$ 0.221 \\
+Mistral-7B-Instruct-v0.3 & TruthfulQA-MC1 & vanilla\_mc & 0.396 $\pm$ 0.000 & 0.604 $\pm$ 0.000 & 0.086 $\pm$ 0.000 & 0.233 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 1.025 $\pm$ 0.408 \\
+\bottomrule
+\end{tabular}
+\end{table*}
