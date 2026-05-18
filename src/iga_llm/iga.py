@@ -25,6 +25,9 @@ class IGAConfig:
     uncertainty_mode: str = "entropy"  # entropy, constant, zero
     head_selection: str = "all"  # all, even, odd, first_half, second_half
     pair_hidden_mult: float = 2.0
+    topk_inhibition: int = 0  # 0 disables; otherwise keep top-k inhibitory edges per query
+    risk_hidden_mult: float = 0.25
+
 
 
 class IGAController:
@@ -39,6 +42,8 @@ class IGAController:
         self.phi: torch.Tensor | None = None
         self.key_cache: dict[int, torch.Tensor] = {}
         self.gamma_penalties: list[torch.Tensor] = []
+        self.risk_losses: list[torch.Tensor] = []
+        self.risk_label: torch.Tensor | None = None
         self.stats: list[dict[str, float]] = []
 
     def set_phi(self, phi: torch.Tensor | None) -> None:
@@ -46,20 +51,36 @@ class IGAController:
 
     def clear_penalties(self) -> None:
         self.gamma_penalties.clear()
+        self.risk_losses.clear()
+
+    def set_risk_label(self, label: float | torch.Tensor | None) -> None:
+        if label is None:
+            self.risk_label = None
+        elif isinstance(label, torch.Tensor):
+            self.risk_label = label.detach().float().view(-1)
+        else:
+            self.risk_label = torch.tensor([float(label)], dtype=torch.float32)
 
     def clear_stats(self) -> None:
         self.stats.clear()
 
     def reset_runtime_state(self) -> None:
         self.phi = None
+        self.risk_label = None
         self.key_cache.clear()
         self.gamma_penalties.clear()
+        self.risk_losses.clear()
         self.stats.clear()
 
     def gamma_regularizer(self) -> torch.Tensor | None:
         if not self.gamma_penalties:
             return None
         return torch.stack([p.float() for p in self.gamma_penalties]).mean()
+
+    def risk_regularizer(self) -> torch.Tensor | None:
+        if not self.risk_losses:
+            return None
+        return torch.stack([p.float() for p in self.risk_losses]).mean()
 
     def diagnostics(self) -> dict[str, float]:
         if not self.stats:
@@ -120,6 +141,8 @@ class IGABias(nn.Module):
         uncertainty_mode: str = "entropy",
         head_selection: str = "all",
         pair_hidden_mult: float = 2.0,
+        topk_inhibition: int = 0,
+        risk_hidden_mult: float = 0.25,
     ) -> None:
         super().__init__()
         self.hidden_size = hidden_size
@@ -127,6 +150,7 @@ class IGABias(nn.Module):
         self.rank = rank
         self.pattern_type = str(pattern_type).lower()
         self.uncertainty_mode = str(uncertainty_mode).lower()
+        self.topk_inhibition = int(topk_inhibition or 0)
         self.q_proj = nn.Linear(hidden_size, rank, bias=False)
         self.k_proj = nn.Linear(hidden_size, rank, bias=False)
         self.bias = nn.Parameter(torch.zeros(()))
@@ -135,6 +159,13 @@ class IGABias(nn.Module):
             nn.Linear(2 * rank + 1, hidden),
             nn.SiLU(),
             nn.Linear(hidden, 1),
+        )
+        risk_hidden = max(8, int(hidden_size * risk_hidden_mult))
+        self.risk_probe = nn.Sequential(
+            nn.LayerNorm(hidden_size),
+            nn.Linear(hidden_size, risk_hidden),
+            nn.SiLU(),
+            nn.Linear(risk_hidden, 1),
         )
         self.constant_logit = nn.Parameter(torch.zeros(()))
         inv_softplus = math.log(math.exp(init_head_strength) - 1.0)
@@ -154,6 +185,10 @@ class IGABias(nn.Module):
         nn.init.normal_(self.q_proj.weight, mean=0.0, std=0.02)
         nn.init.normal_(self.k_proj.weight, mean=0.0, std=0.02)
         for module in self.pair_mlp:
+            if isinstance(module, nn.Linear):
+                nn.init.normal_(module.weight, mean=0.0, std=0.02)
+                nn.init.zeros_(module.bias)
+        for module in self.risk_probe:
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, mean=0.0, std=0.02)
                 nn.init.zeros_(module.bias)
@@ -205,13 +240,45 @@ class IGABias(nn.Module):
             return F.softplus(self.pair_mlp(pair).squeeze(-1).float())
         raise ValueError(f"Unknown IGA pattern_type={self.pattern_type!r}")
 
-    def _gate(self, phi: torch.Tensor | None, bsz: int, q_len: int, device: torch.device) -> torch.Tensor:
-        if self.uncertainty_mode in {"zero", "none", "off"}:
-            return torch.zeros(bsz, q_len, device=device, dtype=torch.float32)
-        if self.uncertainty_mode in {"constant", "flat", "fixed"}:
-            return torch.full((bsz, q_len), float(self.gamma_max.detach().float().cpu()), device=device, dtype=torch.float32)
+    def _entropy_gate(self, phi: torch.Tensor | None, bsz: int, q_len: int, device: torch.device) -> torch.Tensor:
         phi_q = align_phi(phi, bsz, q_len, device, torch.float32)
-        return self.gamma_max.float() * torch.sigmoid(self.beta.float() * (phi_q - self.tau.float()))
+        return torch.sigmoid(self.beta.float() * (phi_q - self.tau.float()))
+
+    def _risk_gate(
+        self,
+        hidden_states: torch.Tensor,
+        controller: IGAController,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        h = hidden_states.to(dtype=self.risk_probe[1].weight.dtype)
+        risk_logits = self.risk_probe(h).squeeze(-1).float()
+        risk_score = torch.sigmoid(risk_logits)
+        if controller.risk_label is not None:
+            target = controller.risk_label.to(device=hidden_states.device, dtype=torch.float32)
+            if target.numel() == 1:
+                target = target.expand(risk_logits.shape[0])
+            target = target.view(-1, 1).expand_as(risk_logits)
+            controller.risk_losses.append(F.binary_cross_entropy_with_logits(risk_logits, target))
+        return risk_score, risk_logits
+
+    def _gate(self, phi: torch.Tensor | None, hidden_states: torch.Tensor, controller: IGAController) -> tuple[torch.Tensor, torch.Tensor | None]:
+        bsz, q_len, _ = hidden_states.shape
+        device = hidden_states.device
+        mode = self.uncertainty_mode
+        if mode in {"zero", "none", "off"}:
+            return torch.zeros(bsz, q_len, device=device, dtype=torch.float32), None
+        if mode in {"constant", "flat", "fixed"}:
+            return torch.full((bsz, q_len), float(self.gamma_max.detach().float().cpu()), device=device, dtype=torch.float32), None
+        entropy_gate = self._entropy_gate(phi, bsz, q_len, device)
+        risk_logits: torch.Tensor | None = None
+        if mode in {"learned_risk", "risk", "hybrid_risk", "entropy_x_risk"}:
+            risk_score, risk_logits = self._risk_gate(hidden_states, controller)
+            if mode in {"hybrid_risk", "entropy_x_risk"}:
+                base_gate = entropy_gate * risk_score
+            else:
+                base_gate = risk_score
+        else:
+            base_gate = entropy_gate
+        return self.gamma_max.float() * base_gate, risk_logits
 
     def forward(
         self,
@@ -228,8 +295,13 @@ class IGABias(nn.Module):
         dtype = hidden_states.dtype
         device = hidden_states.device
         f = self._pattern(hidden_states, controller, layer_idx, use_cache=use_cache)
-        gate = self._gate(phi, bsz, q_len, device)
+        gate, risk_logits = self._gate(phi, hidden_states, controller)
         gamma = f * gate.unsqueeze(-1)
+        if self.topk_inhibition > 0 and gamma.shape[-1] > self.topk_inhibition:
+            k = min(int(self.topk_inhibition), gamma.shape[-1])
+            vals, idx = torch.topk(gamma, k=k, dim=-1)
+            sparse = torch.zeros_like(gamma)
+            gamma = sparse.scatter(-1, idx, vals)
         head_strength = F.softplus(self.head_alpha).view(1, self.num_heads, 1, 1).float()
         mask = self.head_mask.to(device=device, dtype=torch.float32).view(1, self.num_heads, 1, 1)
         gamma_h = gamma.unsqueeze(1) * head_strength * mask
@@ -245,6 +317,9 @@ class IGABias(nn.Module):
                     "gate_mean": float(gate.detach().float().mean().cpu()) if gate.numel() else 0.0,
                     "gate_max": float(gate.detach().float().max().cpu()) if gate.numel() else 0.0,
                     "pattern_mean": float(f.detach().float().mean().cpu()) if f.numel() else 0.0,
+                    "risk_mean": float(torch.sigmoid(risk_logits.detach().float()).mean().cpu()) if risk_logits is not None else 0.0,
+                    "risk_logit_mean": float(risk_logits.detach().float().mean().cpu()) if risk_logits is not None else 0.0,
+                    "topk_inhibition": float(self.topk_inhibition),
                     "active_heads": float(mask.sum().detach().cpu()),
                 }
             )
@@ -365,6 +440,8 @@ def install_iga(model: nn.Module, config: IGAConfig, *, device: torch.device | N
             uncertainty_mode=config.uncertainty_mode,
             head_selection=config.head_selection,
             pair_hidden_mult=config.pair_hidden_mult,
+            topk_inhibition=config.topk_inhibition,
+            risk_hidden_mult=config.risk_hidden_mult,
         ).to(device=device, dtype=dtype)
         modules[str(layer_idx)] = bias_module
         attn = getattr(layers[layer_idx], "self_attn")

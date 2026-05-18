@@ -143,7 +143,19 @@ def write_latex_main_table(df: pd.DataFrame, path: str | Path) -> None:
     for col in needed:
         if col not in df.columns:
             df[col] = np.nan
-    compact = df[df["method"].isin(["vanilla_mc", "temperature_mc", "self_consistency_mc", "semantic_entropy_mc", "iga_mc"])] if not df.empty else df
+    main_methods = [
+        "vanilla_mc",
+        "temperature_mc",
+        "self_consistency_mc",
+        "semantic_entropy_mc",
+        "iga_mc",
+        "iga_v2_lowrank_mc",
+        "iga_v3_risk_sparse_mc",
+        "iga_v3_entropy_sparse_mc",
+        "iga_v3_hybrid_sparse_mc",
+        "iga_v3_risk_mc",
+    ]
+    compact = df[df["method"].isin(main_methods)] if not df.empty else df
     if compact.empty:
         compact = df
     lines = [

@@ -66,6 +66,8 @@ def _build_iga_config(model: Any, cfg: dict[str, Any]) -> IGAConfig:
         uncertainty_mode=str(iga_cfg.get("uncertainty_mode", "entropy")),
         head_selection=str(iga_cfg.get("head_selection", "all")),
         pair_hidden_mult=float(iga_cfg.get("pair_hidden_mult", 2.0)),
+        topk_inhibition=int(iga_cfg.get("topk_inhibition", 0) or 0),
+        risk_hidden_mult=float(iga_cfg.get("risk_hidden_mult", 0.25)),
     )
 
 

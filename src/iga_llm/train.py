@@ -33,7 +33,41 @@ def build_iga_config(model: Any, cfg: dict[str, Any]) -> IGAConfig:
         uncertainty_mode=str(iga_cfg.get("uncertainty_mode", "entropy")),
         head_selection=str(iga_cfg.get("head_selection", "all")),
         pair_hidden_mult=float(iga_cfg.get("pair_hidden_mult", 2.0)),
+        topk_inhibition=int(iga_cfg.get("topk_inhibition", 0) or 0),
+        risk_hidden_mult=float(iga_cfg.get("risk_hidden_mult", 0.25)),
     )
+
+
+def _vanilla_risk_label_for_example(
+    model: Any,
+    tokenizer: Any,
+    controller: Any,
+    ex: EvalExample,
+    max_length: int | None,
+    length_norm: bool,
+    cache: dict[str, float],
+) -> float | None:
+    if ex.choices is None or ex.correct_choice is None:
+        return None
+    if ex.id in cache:
+        return cache[ex.id]
+    was_enabled = getattr(controller, "enabled", True)
+    controller.enabled = False
+    try:
+        pred, conf, probs, nlls = choice_distribution(
+            model,
+            tokenizer,
+            ex.prompt,
+            ex.choices,
+            controller=None,
+            length_norm=length_norm,
+            max_length=max_length,
+        )
+        label = float(int(pred) != int(ex.correct_choice))
+        cache[ex.id] = label
+        return label
+    finally:
+        controller.enabled = was_enabled
 
 
 def _training_loss_for_example(model: Any, tokenizer: Any, controller: Any, ex: EvalExample, max_length: int | None, length_norm: bool) -> torch.Tensor | None:
@@ -92,6 +126,7 @@ def main() -> None:
     max_length = args.max_length if args.max_length is not None else train_cfg.get("max_length", None)
     max_length = int(max_length) if max_length is not None else None
     gamma_reg = float(args.gamma_reg if args.gamma_reg is not None else train_cfg.get("gamma_reg", 1e-3))
+    risk_loss_weight = float(train_cfg.get("risk_loss_weight", 0.0))
     weight_decay = float(train_cfg.get("weight_decay", 0.0))
     max_grad_norm = float(train_cfg.get("max_grad_norm", 1.0))
     dev_eval_limit = int(train_cfg.get("dev_eval_limit", 64))
@@ -118,6 +153,7 @@ def main() -> None:
     trainable, total = count_trainable_parameters(model)
     optimizer = AdamW([p for p in model.parameters() if p.requires_grad], lr=lr, weight_decay=weight_decay)
     logs: list[dict[str, Any]] = []
+    risk_label_cache: dict[str, float] = {}
 
     start_time = time.time()
     global_step = 0
@@ -130,12 +166,19 @@ def main() -> None:
         for pos, idx in enumerate(pbar, start=1):
             ex = train_examples[idx]
             optimizer.zero_grad(set_to_none=True)
+            risk_label = _vanilla_risk_label_for_example(
+                model, tokenizer, controller, ex, max_length=max_length, length_norm=args.length_norm, cache=risk_label_cache
+            )
+            controller.set_risk_label(risk_label)
             loss = _training_loss_for_example(model, tokenizer, controller, ex, max_length=max_length, length_norm=args.length_norm)
             if loss is None:
                 continue
             reg = controller.gamma_regularizer()
+            risk_reg = controller.risk_regularizer()
             if reg is not None and gamma_reg > 0:
                 loss = loss + gamma_reg * reg
+            if risk_reg is not None and risk_loss_weight > 0:
+                loss = loss + risk_loss_weight * risk_reg
             loss.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], max_grad_norm)
             optimizer.step()
@@ -149,6 +192,8 @@ def main() -> None:
                 "benchmark": ex.benchmark,
                 "loss": float(loss.detach().float().cpu()),
                 "gamma_regularizer": float(reg.detach().float().cpu()) if reg is not None else None,
+                "risk_regularizer": float(risk_reg.detach().float().cpu()) if risk_reg is not None else None,
+                "risk_label": risk_label,
                 "grad_norm": float(torch.as_tensor(grad_norm).detach().float().cpu()),
                 "lr": lr,
                 "seed": seed,
@@ -192,6 +237,8 @@ def main() -> None:
         "trainable_fraction": trainable / total if total else None,
         "elapsed_s": time.time() - start_time,
         "config_sha256": sha256_json(cfg),
+        "risk_labels_computed": len(risk_label_cache),
+        "risk_loss_weight": risk_loss_weight,
         "package_versions": package_versions(),
     }
     json_dump(output_dir / "train_summary.json", summary)
