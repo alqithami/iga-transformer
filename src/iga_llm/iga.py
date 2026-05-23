@@ -160,13 +160,17 @@ class IGABias(nn.Module):
             nn.SiLU(),
             nn.Linear(hidden, 1),
         )
-        risk_hidden = max(8, int(hidden_size * risk_hidden_mult))
-        self.risk_probe = nn.Sequential(
-            nn.LayerNorm(hidden_size),
-            nn.Linear(hidden_size, risk_hidden),
-            nn.SiLU(),
-            nn.Linear(risk_hidden, 1),
-        )
+        self.uses_risk_gate = self.uncertainty_mode in {"learned_risk", "risk", "hybrid_risk", "entropy_x_risk"}
+        if self.uses_risk_gate:
+            risk_hidden = max(8, int(hidden_size * risk_hidden_mult))
+            self.risk_probe = nn.Sequential(
+                nn.LayerNorm(hidden_size),
+                nn.Linear(hidden_size, risk_hidden),
+                nn.SiLU(),
+                nn.Linear(risk_hidden, 1),
+            )
+        else:
+            self.risk_probe = None
         self.constant_logit = nn.Parameter(torch.zeros(()))
         inv_softplus = math.log(math.exp(init_head_strength) - 1.0)
         self.head_alpha = nn.Parameter(torch.full((num_heads,), inv_softplus))
@@ -188,10 +192,11 @@ class IGABias(nn.Module):
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, mean=0.0, std=0.02)
                 nn.init.zeros_(module.bias)
-        for module in self.risk_probe:
-            if isinstance(module, nn.Linear):
-                nn.init.normal_(module.weight, mean=0.0, std=0.02)
-                nn.init.zeros_(module.bias)
+        if self.risk_probe is not None:
+            for module in self.risk_probe:
+                if isinstance(module, nn.Linear):
+                    nn.init.normal_(module.weight, mean=0.0, std=0.02)
+                    nn.init.zeros_(module.bias)
 
     @property
     def gamma_max(self) -> torch.Tensor:
@@ -249,6 +254,10 @@ class IGABias(nn.Module):
         hidden_states: torch.Tensor,
         controller: IGAController,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        if self.risk_probe is None:
+            bsz, q_len, _ = hidden_states.shape
+            zeros = torch.zeros(bsz, q_len, device=hidden_states.device, dtype=torch.float32)
+            return zeros, zeros
         h = hidden_states.to(dtype=self.risk_probe[1].weight.dtype)
         risk_logits = self.risk_probe(h).squeeze(-1).float()
         risk_score = torch.sigmoid(risk_logits)

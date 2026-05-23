@@ -1,0 +1,31 @@
+model_id: meta-llama/Meta-Llama-3-8B-Instruct
+model_revision: null
+device: auto
+dtype: float16
+attn_implementation: eager
+trust_remote_code: false
+seed: 1
+iga:
+  layers: late
+  rank: 16
+  pattern_type: low_rank
+  uncertainty_mode: learned_risk
+  topk_inhibition: 64
+  gamma_max: 2.0
+  beta: 8.0
+  tau: 0.35
+  init_head_strength: 0.05
+  train_gamma_threshold: false
+  head_selection: all
+  pair_hidden_mult: 2.0
+  risk_hidden_mult: 0.25
+train:
+  epochs: 1
+  batch_size: 1
+  lr: 0.00015
+  weight_decay: 0.0
+  gamma_reg: 0.003
+  risk_loss_weight: 0.10
+  max_grad_norm: 1.0
+  max_length: 768
+  dev_eval_limit: 300

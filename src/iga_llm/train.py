@@ -127,6 +127,8 @@ def main() -> None:
     max_length = int(max_length) if max_length is not None else None
     gamma_reg = float(args.gamma_reg if args.gamma_reg is not None else train_cfg.get("gamma_reg", 1e-3))
     risk_loss_weight = float(train_cfg.get("risk_loss_weight", 0.0))
+    iga_mode = str(cfg.get("iga", {}).get("uncertainty_mode", "entropy")).lower()
+    needs_risk_labels = risk_loss_weight > 0 or iga_mode in {"learned_risk", "risk", "hybrid_risk", "entropy_x_risk"}
     weight_decay = float(train_cfg.get("weight_decay", 0.0))
     max_grad_norm = float(train_cfg.get("max_grad_norm", 1.0))
     dev_eval_limit = int(train_cfg.get("dev_eval_limit", 64))
@@ -166,9 +168,11 @@ def main() -> None:
         for pos, idx in enumerate(pbar, start=1):
             ex = train_examples[idx]
             optimizer.zero_grad(set_to_none=True)
-            risk_label = _vanilla_risk_label_for_example(
-                model, tokenizer, controller, ex, max_length=max_length, length_norm=args.length_norm, cache=risk_label_cache
-            )
+            risk_label = None
+            if needs_risk_labels:
+                risk_label = _vanilla_risk_label_for_example(
+                    model, tokenizer, controller, ex, max_length=max_length, length_norm=args.length_norm, cache=risk_label_cache
+                )
             controller.set_risk_label(risk_label)
             loss = _training_loss_for_example(model, tokenizer, controller, ex, max_length=max_length, length_norm=args.length_norm)
             if loss is None:

@@ -1,0 +1,13 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|                                 | 0/339 [00:00<?, ?it/s]Loading weights:   0%|                         | 1/339 [00:00<01:06,  5.10it/s]Loading weights:   1%|▏                        | 2/339 [00:00<01:10,  4.80it/s]Loading weights:   4%|▉                       | 13/339 [00:00<00:09, 35.00it/s]Loading weights:   8%|█▉                      | 28/339 [00:00<00:04, 66.34it/s]Loading weights:  12%|██▊                     | 40/339 [00:00<00:04, 74.61it/s]Loading weights:  16%|███▊                    | 54/339 [00:00<00:03, 86.25it/s]Loading weights:  19%|████▋                   | 66/339 [00:01<00:03, 90.07it/s]Loading weights:  23%|█████▌                  | 78/339 [00:01<00:02, 97.82it/s]Loading weights:  28%|██████▍                | 94/339 [00:01<00:02, 114.55it/s]Loading weights:  33%|███████▎              | 112/339 [00:01<00:01, 126.72it/s]Loading weights:  37%|████████▏             | 126/339 [00:01<00:01, 116.69it/s]Loading weights:  44%|█████████▌            | 148/339 [00:01<00:01, 137.11it/s]Loading weights:  48%|██████████▌           | 163/339 [00:01<00:01, 128.67it/s]Loading weights:  54%|███████████▉          | 184/339 [00:01<00:01, 142.06it/s]Loading weights:  59%|████████████▉         | 199/339 [00:01<00:01, 131.70it/s]Loading weights:  64%|██████████████        | 217/339 [00:02<00:00, 143.84it/s]Loading weights:  68%|███████████████       | 232/339 [00:02<00:00, 125.00it/s]Loading weights:  76%|████████████████▌     | 256/339 [00:02<00:00, 145.37it/s]Loading weights:  80%|█████████████████▋    | 272/339 [00:02<00:00, 134.08it/s]Loading weights:  85%|██████████████████▋   | 288/339 [00:02<00:00, 140.36it/s]Loading weights:  90%|███████████████████▋  | 304/339 [00:02<00:00, 139.68it/s]Loading weights:  94%|████████████████████▋ | 319/339 [00:02<00:00, 129.14it/s]Loading weights: 100%|██████████████████████▉| 338/339 [00:03<00:00, 90.95it/s]Loading weights: 100%|██████████████████████| 339/339 [00:03<00:00, 106.12it/s]
+[vanilla_custom_gen] 25 examples parse=25/25
+[vanilla_custom_gen] 50 examples parse=50/50
+[vanilla_custom_gen] 75 examples parse=75/75
+[vanilla_custom_gen] 100 examples parse=100/100
+[vanilla_custom_gen] 125 examples parse=125/125
+{
+  "method": "vanilla_custom_gen",
+  "n": 149,
+  "parsed": 149,
+  "out": "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_truthfulqa_vanilla_custom_gen.jsonl"
+}
