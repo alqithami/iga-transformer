@@ -1,0 +1,25 @@
+{
+  "benchmark": "fever",
+  "benchmark_counts": {
+    "FEVER": 300
+  },
+  "dev_frac": 0.2,
+  "halueval_config": null,
+  "ids_sha256": "0388e7d9cb33c7185ddf470edad08cf7e11ae477742966e6ea6d61974cc516f6",
+  "limit": 300,
+  "load_limit": 4000,
+  "n": 300,
+  "name": "fever",
+  "out": "results/mistral_full_generation_20260507_234820/data/fever_eval.jsonl",
+  "revision": null,
+  "role": "all",
+  "rows_sha256": "0af8d72c39f430d892aa12f1e9be944404370a03eb162a23a159a7ebbf99e905",
+  "source_split": "labelled_dev",
+  "split_counts": {
+    "dev": 51,
+    "test": 61,
+    "train": 188
+  },
+  "split_seed": 13,
+  "train_frac": 0.6
+}
