@@ -1,0 +1,24 @@
+{
+  "latency_files": [],
+  "n_groups": 6,
+  "n_prediction_rows": 1498,
+  "outputs": [
+    "summary_per_seed.csv",
+    "summary_by_model_benchmark_method.csv",
+    "calibration_bins.csv",
+    "paired_deltas_vs_vanilla.csv",
+    "paired_delta_summary.csv",
+    "main_results_table.tex",
+    "ablation_table.tex",
+    "latency_summary.csv",
+    "efficiency_table.tex"
+  ],
+  "prediction_files": [
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_fever_dola_custom_gen.jsonl",
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_fever_vanilla_custom_gen.jsonl",
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_halueval_dola_custom_gen.jsonl",
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_halueval_vanilla_custom_gen.jsonl",
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_truthfulqa_dola_custom_gen.jsonl",
+    "results/qwen2_5_7b_custom_dola_appendix/predictions/qwen2_5_7b_truthfulqa_vanilla_custom_gen.jsonl"
+  ]
+}

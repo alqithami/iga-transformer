@@ -1,0 +1,15 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+Qwen/Qwen2.5-7B-Instruct & FEVER & iga\_shuffle\_mc & 0.524 $\pm$ 0.040 & 0.476 $\pm$ 0.040 & 0.244 $\pm$ 0.040 & 0.312 $\pm$ 0.026 & 1.000 $\pm$ 0.000 & 0.220 $\pm$ 0.003 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & iga\_shuffle\_mc & 0.939 $\pm$ 0.020 & 0.061 $\pm$ 0.020 & 0.052 $\pm$ 0.014 & 0.056 $\pm$ 0.020 & 1.000 $\pm$ 0.000 & 0.159 $\pm$ 0.006 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & iga\_shuffle\_mc & 0.425 $\pm$ 0.008 & 0.575 $\pm$ 0.008 & 0.120 $\pm$ 0.011 & 0.247 $\pm$ 0.004 & 1.000 $\pm$ 0.000 & 0.366 $\pm$ 0.012 \\
+\bottomrule
+\end{tabular}
+\end{table*}

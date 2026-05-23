@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+Qwen/Qwen2.5-7B-Instruct & FEVER & iga\_v2\_lowrank\_mc & 0.524 $\pm$ 0.040 & 0.476 $\pm$ 0.040 & 0.244 $\pm$ 0.040 & 0.312 $\pm$ 0.026 & 1.000 $\pm$ 0.000 & 0.219 $\pm$ 0.008 \\
+Qwen/Qwen2.5-7B-Instruct & FEVER & self\_consistency\_mc & 0.470 $\pm$ 0.012 & 0.530 $\pm$ 0.012 & 0.356 $\pm$ 0.009 & 0.365 $\pm$ 0.007 & 1.000 $\pm$ 0.000 & 5.397 $\pm$ 0.056 \\
+Qwen/Qwen2.5-7B-Instruct & FEVER & semantic\_entropy\_mc & 0.470 $\pm$ 0.012 & 0.530 $\pm$ 0.012 & 0.270 $\pm$ 0.006 & 0.319 $\pm$ 0.008 & 1.000 $\pm$ 0.000 & 5.340 $\pm$ 0.102 \\
+Qwen/Qwen2.5-7B-Instruct & FEVER & temperature\_mc & 0.293 $\pm$ 0.000 & 0.707 $\pm$ 0.000 & 0.644 $\pm$ 0.000 & 0.626 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.100 $\pm$ 0.004 \\
+Qwen/Qwen2.5-7B-Instruct & FEVER & vanilla\_mc & 0.293 $\pm$ 0.000 & 0.707 $\pm$ 0.000 & 0.595 $\pm$ 0.000 & 0.566 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.103 $\pm$ 0.003 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & iga\_v2\_lowrank\_mc & 0.939 $\pm$ 0.020 & 0.061 $\pm$ 0.020 & 0.052 $\pm$ 0.014 & 0.056 $\pm$ 0.020 & 1.000 $\pm$ 0.000 & 0.151 $\pm$ 0.001 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & self\_consistency\_mc & 0.657 $\pm$ 0.009 & 0.343 $\pm$ 0.009 & 0.315 $\pm$ 0.004 & 0.329 $\pm$ 0.002 & 1.000 $\pm$ 0.000 & 5.314 $\pm$ 0.028 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & semantic\_entropy\_mc & 0.657 $\pm$ 0.009 & 0.343 $\pm$ 0.009 & 0.358 $\pm$ 0.021 & 0.357 $\pm$ 0.016 & 1.000 $\pm$ 0.000 & 5.329 $\pm$ 0.086 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & temperature\_mc & 0.557 $\pm$ 0.000 & 0.443 $\pm$ 0.000 & 0.372 $\pm$ 0.000 & 0.359 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.071 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & vanilla\_mc & 0.557 $\pm$ 0.000 & 0.443 $\pm$ 0.000 & 0.345 $\pm$ 0.000 & 0.328 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.068 $\pm$ 0.003 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & iga\_v2\_lowrank\_mc & 0.425 $\pm$ 0.008 & 0.575 $\pm$ 0.008 & 0.120 $\pm$ 0.011 & 0.247 $\pm$ 0.004 & 1.000 $\pm$ 0.000 & 0.363 $\pm$ 0.008 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & self\_consistency\_mc & 0.658 $\pm$ 0.007 & 0.342 $\pm$ 0.007 & 0.294 $\pm$ 0.010 & 0.281 $\pm$ 0.006 & 1.000 $\pm$ 0.000 & 5.459 $\pm$ 0.044 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & semantic\_entropy\_mc & 0.658 $\pm$ 0.007 & 0.342 $\pm$ 0.007 & 0.280 $\pm$ 0.011 & 0.269 $\pm$ 0.005 & 1.000 $\pm$ 0.000 & 5.263 $\pm$ 0.062 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & temperature\_mc & 0.376 $\pm$ 0.000 & 0.624 $\pm$ 0.000 & 0.212 $\pm$ 0.000 & 0.269 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.165 $\pm$ 0.002 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & vanilla\_mc & 0.376 $\pm$ 0.000 & 0.624 $\pm$ 0.000 & 0.162 $\pm$ 0.000 & 0.252 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.169 $\pm$ 0.007 \\
+\bottomrule
+\end{tabular}
+\end{table*}

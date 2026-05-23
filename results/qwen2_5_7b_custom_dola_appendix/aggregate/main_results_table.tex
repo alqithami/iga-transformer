@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\caption{Main factuality and calibration results. FA and answer rate are higher-is-better; hallucination rate, ECE, Brier, refusal rate, and latency are lower-is-better. Values are mean $\pm$ std across seeds when multiple seeds are available.}
+\label{tab:main_results}
+\small
+\begin{tabular}{lllcccccc}
+\toprule
+Model & Benchmark & Method & FA$\uparrow$ & HR$\downarrow$ & ECE$\downarrow$ & Brier$\downarrow$ & Ans.$\uparrow$ & Lat. s$\downarrow$ \\
+\midrule
+Qwen/Qwen2.5-7B-Instruct & FEVER & dola\_custom\_gen & 0.120 $\pm$ 0.000 & 0.880 $\pm$ 0.000 & 0.207 $\pm$ 0.000 & 0.207 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.537 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & FEVER & vanilla\_custom\_gen & 0.493 $\pm$ 0.000 & 0.507 $\pm$ 0.000 & 0.507 $\pm$ 0.000 & 0.507 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.065 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & dola\_custom\_gen & 0.213 $\pm$ 0.000 & 0.787 $\pm$ 0.000 & 0.087 $\pm$ 0.000 & 0.087 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.471 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & HaluEval-QA & vanilla\_custom\_gen & 0.703 $\pm$ 0.000 & 0.297 $\pm$ 0.000 & 0.297 $\pm$ 0.000 & 0.297 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.073 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & dola\_custom\_gen & 0.664 $\pm$ 0.000 & 0.336 $\pm$ 0.000 & 0.168 $\pm$ 0.000 & 0.168 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.264 $\pm$ 0.000 \\
+Qwen/Qwen2.5-7B-Instruct & TruthfulQA-MC1 & vanilla\_custom\_gen & 0.745 $\pm$ 0.000 & 0.255 $\pm$ 0.000 & 0.255 $\pm$ 0.000 & 0.255 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.080 $\pm$ 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

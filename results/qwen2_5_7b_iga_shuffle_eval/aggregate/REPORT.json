@@ -1,0 +1,27 @@
+{
+  "latency_files": [],
+  "n_groups": 3,
+  "n_prediction_rows": 2247,
+  "outputs": [
+    "summary_per_seed.csv",
+    "summary_by_model_benchmark_method.csv",
+    "calibration_bins.csv",
+    "paired_deltas_vs_vanilla.csv",
+    "paired_delta_summary.csv",
+    "main_results_table.tex",
+    "ablation_table.tex",
+    "latency_summary.csv",
+    "efficiency_table.tex"
+  ],
+  "prediction_files": [
+    "results/qwen2_5_7b_iga_shuffle_eval/seed1/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed1_fever_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed1/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed1_halueval_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed1/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed1_truthfulqa_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed2/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed2_fever_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed2/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed2_halueval_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed2/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed2_truthfulqa_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed3/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed3_fever_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed3/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed3_halueval_iga_shuffle_mc.jsonl",
+    "results/qwen2_5_7b_iga_shuffle_eval/seed3/predictions/qwen2_5_7b_iga_lowrank_g2_tau035_matched_seed3_truthfulqa_iga_shuffle_mc.jsonl"
+  ]
+}
