@@ -88,6 +88,8 @@ def _method_config(args: argparse.Namespace, cfg: dict[str, Any]) -> dict[str, A
         "num_samples": args.num_samples,
         "length_norm": not args.no_length_norm,
         "iga_checkpoint": args.iga_checkpoint,
+        "lora_adapter_dir": args.lora_adapter_dir,
+        "lora_merged_for_eval": bool(args.lora_adapter_dir),
         "iga": cfg.get("iga", {}),
     }
 
@@ -310,6 +312,7 @@ def main() -> None:
     parser.add_argument("--out", required=True)
     parser.add_argument("--method", default="vanilla_mc")
     parser.add_argument("--iga_checkpoint", default=None)
+    parser.add_argument("--lora_adapter_dir", default=None, help="Optional PEFT LoRA adapter to merge into the backbone before evaluation.")
     parser.add_argument("--mode", default="auto", choices=["auto", "choice", "generate"])
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--top_p", type=float, default=1.0)
@@ -344,6 +347,14 @@ def main() -> None:
         revision=cfg.get("model_revision"),
     )
     model, tokenizer = loaded.model, loaded.tokenizer
+    if args.lora_adapter_dir:
+        from peft import PeftModel
+        print(f"[LoRA+IGA] Loading and merging frozen LoRA adapter for eval: {args.lora_adapter_dir}", flush=True)
+        peft_model = PeftModel.from_pretrained(model, args.lora_adapter_dir)
+        model = peft_model.merge_and_unload()
+        model.eval()
+        for param in model.parameters():
+            param.requires_grad_(False)
     controller = None
     needs_iga = args.method in {"iga_mc", "iga_gen"}
     if needs_iga:

@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: "Inhibitory-Gate Attention: Learned Negative Routing for Factual Calibration in Language Models"
+message: "If you use this software, please cite the associated paper."
+type: software
+authors:
+  - name: Anonymous
+version: 0.2.0
+repository-code: "https://github.com/alqithami/iga-transformer"
+license: MIT

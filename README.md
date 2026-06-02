@@ -1,225 +1,196 @@
-# IGA experiment pipeline
+# Inhibitory-Gate Attention (IGA)
 
-This repository is the runnable local pipeline for **Uncertainty-Gated Inhibitory Attention (IGA)** experiments.
+This repository contains the research code for **Inhibitory-Gate Attention: Learned Negative Routing for Factual Calibration in Language Models**.
 
-It is designed to generate the result package reviewers will ask for:
+IGA is a frozen-backbone intervention for decoder-only language models. It learns a small, nonnegative inhibitory field and subtracts it from attention logits:
 
-- factual accuracy / hallucination proxy / ECE / Brier score
-- answer rate, refusal rate, generation length, parse-success rate
-- seed-separated and model-separated summaries
-- raw per-example JSONL prediction records
-- calibration bins and paired deltas against vanilla
-- latency, tokens/sec, and memory traces at multiple prompt lengths
-- IGA diagnostics: gamma/gate/pattern statistics
-- ablations for gate, inhibition pattern, layer placement, head selection, rank, gamma strength, threshold training, and inference-only IGA
+```text
+A' = softmax(S - Gamma),   Gamma >= 0
+```
 
-The code intentionally does **not** fabricate numerical results. Tables are generated only from raw JSONL outputs.
+The main implementation is dense low-rank IGA: a low-rank query--key penalty scaled by a row-wise entropy gate. The repository also includes sparse IGA, learned-risk-gate diagnostics, LoRA and LoRA+IGA composition scripts, choice-shuffle audits, higher-sample self-consistency checks, DoLa generation-harness diagnostics, and reviewer-oriented bootstrap/selective-prediction analyses.
 
-## 1. Setup on Mac M4 Max
+## What this code supports
+
+- Frozen-backbone IGA training and choice evaluation.
+- Mistral-7B, Llama-3-8B, and Qwen2.5-7B configs.
+- Dense and sparse IGA variants.
+- LoRA-only and frozen-LoRA + trainable-IGA composition experiments.
+- Choice-likelihood baselines: vanilla, temperature scaling, semantic entropy, and self-consistency.
+- Higher-sample self-consistency diagnostics.
+- Choice-shuffle audits for answer-order artifacts.
+- DoLa custom-generation harness diagnostics.
+- Aggregate reporting: factual accuracy, ECE, Brier score, latency, AURC/selective prediction, calibration bins, paired deltas, and bootstrap intervals.
+
+The code does **not** include model weights, trained adapters, or benchmark data. Those should be regenerated locally or supplied through a separate data artifact.
+
+## Setup
+
+### GPU environment
 
 ```bash
-cd code
-bash scripts/setup_mac_m4.sh
+python -m venv .venv
 source .venv/bin/activate
-source .env.mac_m4
+python -m pip install --upgrade pip wheel setuptools
+python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+python -m pip install -U \
+  transformers datasets accelerate safetensors sentencepiece protobuf tokenizers \
+  tqdm numpy pandas scikit-learn pyyaml psutil peft "huggingface_hub[cli]"
+python -m pip install -e .
 ```
 
-For gated models such as Llama 3, authenticate first:
+For gated models, authenticate with Hugging Face:
 
 ```bash
-huggingface-cli login
+hf auth login
 ```
 
-## 2. Smoke test
-
-This verifies the code path using a tiny Llama-like checkpoint and synthetic data. Do not report these numbers.
+### Smoke test
 
 ```bash
 bash scripts/run_smoke.sh
 ```
 
-Outputs:
+The smoke test uses a tiny model and synthetic data. Do not report smoke-test numbers.
 
-```text
-results/smoke/aggregate/summary_by_model_benchmark_method.csv
-results/smoke/aggregate/main_results_table.tex
-```
+## Data protocol
 
-## 3. First serious M4 run
+The pipeline prepares deterministic JSONL splits and manifests for:
 
-Start with Mistral and smaller limits:
+- TruthfulQA-MC1
+- FEVER
+- HaluEval-QA
 
-```bash
-CONFIGS="configs/mistral_7b_iga.yaml" \
-SEEDS="1" \
-LIMIT_TRAIN=300 \
-LIMIT_DEV=100 \
-LIMIT_EVAL=100 \
-RUN_ABLATIONS=1 \
-SKIP_GENERATION=1 \
-bash scripts/run_full_mac_m4max.sh
-```
+The calibration mixture uses train/dev partitions; final evaluation uses held-out evaluation partitions. FEVER is loaded from JSONL sources to avoid deprecated dataset-script behavior.
 
-This produces the reviewer-critical multiple-choice/verification evidence without the slower free-form decoding baselines.
+## Core dense IGA runs
 
-## 4. Full paper matrix
+### Qwen dense IGA, one seed
 
 ```bash
-CONFIGS="configs/llama3_8b_iga.yaml configs/mistral_7b_iga.yaml" \
-SEEDS="1 2 3" \
-LIMIT_TRAIN=1000 \
-LIMIT_DEV=300 \
-LIMIT_EVAL=300 \
-RUN_ABLATIONS=1 \
-bash scripts/run_full_mac_m4max.sh
+bash scripts/run_qwen_dense_seed.sh 1
+bash scripts/run_qwen_dense_seed.sh 2
+bash scripts/run_qwen_dense_seed.sh 3
 ```
 
-Or simply:
+### Aggregate Qwen dense/baseline runs
 
 ```bash
-bash scripts/run_two_model_paper_matrix.sh
+bash scripts/aggregate_qwen_three_seed.sh
 ```
 
-## 5. Where results appear
+### Mistral/Llama paper runs
 
-A full run writes:
+Use the model-specific configs in `configs/` and the runner scripts in `scripts/`. The full Mac runner remains available for local Apple Silicon reproduction, but GPU execution is recommended for Qwen and LoRA+IGA.
 
-```text
-results/full_<timestamp>/
-  data/
-    truthfulqa_train.jsonl
-    truthfulqa_dev.jsonl
-    truthfulqa_eval.jsonl
-    fever_train.jsonl
-    fever_dev.jsonl
-    fever_eval.jsonl
-    halueval_train.jsonl
-    halueval_dev.jsonl
-    halueval_eval.jsonl
-    calibration_train_mix.jsonl
-    calibration_dev_mix.jsonl
-  runs/
-    <model>_seed<seed>/full_iga/iga_modules.pt
-    <model>_seed<seed>/<ablation>/iga_modules.pt
-  predictions/
-    *.jsonl
-  latency/
-    *.jsonl
-  aggregate/
-    summary_per_seed.csv
-    summary_by_model_benchmark_method.csv
-    calibration_bins.csv
-    paired_deltas_vs_vanilla.csv
-    paired_delta_summary.csv
-    latency_summary.csv
-    main_results_table.tex
-    ablation_table.tex
-    efficiency_table.tex
-    REPORT.json
-  matrix_manifest.json
-```
+## LoRA and LoRA+IGA composition
 
-## 6. What is trained
+The composition experiment loads a trained LoRA adapter, merges/freezes it into the backbone, and trains only the IGA controller on top of the LoRA-adapted model. The entropy gate is computed from the LoRA-adapted backbone, not from vanilla predictions.
 
-The pretrained LLM backbone is frozen. IGA installs small trainable modules into selected self-attention layers.
-
-Default IGA uses:
-
-```text
-attention_logits' = attention_logits - Gamma
-Gamma_ijh = head_strength_h * gate(phi_i) * f_theta(h_i, h_j)
-gate(phi_i) = gamma_max * sigmoid(beta * (phi_i - tau))
-```
-
-The default `f_theta` is a paper-aligned pair MLP over low-rank q/k interaction features:
-
-```text
-f_theta(i,j) = softplus(MLP([q_i ⊙ k_j ; |q_i-k_j| ; q_i^T k_j]))
-```
-
-Config fields:
-
-```yaml
-iga:
-  layers: late
-  rank: 16
-  pattern_type: pair_mlp
-  uncertainty_mode: entropy
-  gamma_max: 2.0
-  beta: 8.0
-  tau: 0.35
-  train_gamma_threshold: false
-  head_selection: all
-```
-
-By default, `gamma_max`, `beta`, and `tau` are fixed. The `ablate_train_threshold` condition learns them.
-
-## 7. Baselines included
-
-Choice / verifier-mode baselines:
-
-```text
-vanilla_mc
-temperature_mc
-self_consistency_mc
-semantic_entropy_mc
-iga_mc
-```
-
-Generation-classification baselines:
-
-```text
-vanilla_gen
-contrastive_gen
-dola_gen
-self_refine_gen
-cove_gen
-iga_gen
-```
-
-Generation baselines are parsed back to benchmark labels and include parse-success flags. Use them as secondary evidence unless you add an external factuality judge.
-
-## 8. Ablations included
-
-```text
-ablate_full_iga
-ablate_no_uncertainty_gate
-ablate_no_inhibition
-ablate_constant_inhibition
-ablate_low_rank_dot
-ablate_pair_mlp
-ablate_early_layers
-ablate_middle_layers
-ablate_all_layers
-ablate_selected_heads_even
-ablate_train_threshold
-ablate_rank_8
-ablate_rank_64
-ablate_gamma_0p5
-ablate_gamma_4
-ablate_inference_only
-```
-
-The default ablation run uses a compact subset that covers the key reviewer questions.
-
-## 9. Data leakage prevention
-
-The runner prepares disjoint calibration/dev/evaluation files:
-
-- TruthfulQA: deterministic hash split of validation into train/dev/test partitions.
-- HaluEval: deterministic hash split of the selected subset, default `qa`, into train/dev/test partitions.
-- FEVER: train/dev come from FEVER train; final evaluation comes from `labelled_dev`.
-
-All JSONL files and manifests are hashed.
-
-## 10. Paper integration
-
-After a run:
+### Train/evaluate Qwen LoRA baseline
 
 ```bash
-cp results/full_<timestamp>/aggregate/main_results_table.tex ../paper/tables/main_results.tex
-cp results/full_<timestamp>/aggregate/ablation_table.tex ../paper/tables/ablations.tex
-cp results/full_<timestamp>/aggregate/efficiency_table.tex ../paper/tables/efficiency.tex
+bash scripts/run_qwen_lora_fixed_pipeline.sh
 ```
 
-Do not claim fixed overhead such as “8%” until `efficiency_table.tex` supports it.
+### Qwen LoRA+IGA composition
+
+```bash
+bash scripts/run_qwen_lora_plus_iga_three_seeds.sh
+```
+
+### Mistral LoRA and Mistral LoRA+IGA diagnostic
+
+```bash
+python scripts/train_lora_choice.py \
+  --model_id mistralai/Mistral-7B-Instruct-v0.3 \
+  --train_jsonl results/mistral_full_generation_20260507_234820/data/calibration_train_mix.jsonl \
+  --dev_jsonl results/mistral_full_generation_20260507_234820/data/calibration_dev_mix.jsonl \
+  --output_dir results/mistral_7b_lora_matched/seed1/run \
+  --seed 1 \
+  --epochs 1 \
+  --lora_r 2 \
+  --lora_alpha 4 \
+  --target_modules q_proj,v_proj,o_proj \
+  --dtype bfloat16
+
+bash scripts/run_mistral_lora_plus_iga_one_seed.sh 1
+bash scripts/run_mistral_lora_plus_iga_one_seed.sh 2
+bash scripts/run_mistral_lora_plus_iga_one_seed.sh 3
+```
+
+## Reviewer diagnostics
+
+### Selective prediction, no-HaluEval, and AURC
+
+```bash
+python scripts/reviewer_risk_checks.py \
+  --out_dir results/reviewer_checks_qwen_lora_plus_iga \
+  --predictions results/qwen2_5_7b_lora_fixed_eval/seed*/predictions/*.jsonl \
+                results/qwen2_5_7b_lora_plus_iga_seed*/predictions/*.jsonl
+```
+
+### Paired bootstrap
+
+```bash
+python scripts/bootstrap_two_methods.py \
+  --a_label lora_iga \
+  --b_label lora \
+  --a results/qwen2_5_7b_lora_plus_iga_seed*/predictions/*.jsonl \
+  --b results/qwen2_5_7b_lora_fixed_eval/seed*/predictions/*.jsonl \
+  --out results/reviewer_checks_qwen_lora_plus_iga/bootstrap_lora_iga_vs_lora.csv
+```
+
+### Qwen 20-sample self-consistency diagnostic
+
+```bash
+# Use the resume script pattern if long runs are interrupted.
+bash scripts/resume_qwen_sc20.sh
+```
+
+If the resume script is not present, run `iga_llm.evaluate` with `--method self_consistency_mc --report_method self_consistency20_mc --num_samples 20` for each seed/benchmark.
+
+### Choice-shuffle audit
+
+```bash
+bash scripts/run_qwen_choice_shuffle_audit.sh
+```
+
+## Reporting
+
+Aggregate any set of prediction JSONL files with:
+
+```bash
+python -m iga_llm.report --out_dir <aggregate_out> --predictions <prediction_files...>
+```
+
+Typical outputs:
+
+```text
+summary_per_seed.csv
+summary_by_model_benchmark_method.csv
+calibration_bins.csv
+paired_deltas_vs_vanilla.csv
+paired_delta_summary.csv
+main_results_table.tex
+ablation_table.tex
+latency_summary.csv
+efficiency_table.tex
+REPORT.json
+```
+
+## Artifact policy
+
+Do not commit large generated artifacts to this repository:
+
+- model weights
+- LoRA adapter weights
+- `.pt`, `.bin`, `.safetensors`
+- raw full result folders
+- large prediction archives
+
+For review, provide code and data artifacts separately. The ARR software artifact should contain this repository code/configs/scripts; the ARR data artifact should contain processed splits, aggregate CSVs, generated tables, and weight-free prediction archives.
+
+## Notes on scope
+
+The main paper claims concern labeled choice/verification scoring. Generation-mode DoLa is included as a harness diagnostic only; deployment-grade autoregressive IGA requires fused inhibitory-attention kernels.

@@ -107,6 +107,7 @@ def main() -> None:
     parser.add_argument("--train_jsonl", required=True)
     parser.add_argument("--dev_jsonl", default=None)
     parser.add_argument("--output_dir", required=True)
+    parser.add_argument("--lora_adapter_dir", default=None, help="Optional PEFT LoRA adapter to merge into the frozen backbone before training IGA.")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
@@ -149,6 +150,14 @@ def main() -> None:
         revision=cfg.get("model_revision"),
     )
     model, tokenizer = loaded.model, loaded.tokenizer
+    if args.lora_adapter_dir:
+        from peft import PeftModel
+        print(f"[LoRA+IGA] Loading and merging frozen LoRA adapter: {args.lora_adapter_dir}", flush=True)
+        peft_model = PeftModel.from_pretrained(model, args.lora_adapter_dir)
+        model = peft_model.merge_and_unload()
+        model.eval()
+        for param in model.parameters():
+            param.requires_grad_(False)
     # Keep IGA modules in fp32 for optimizer stability; the hook casts returned bias to attention dtype.
     controller = install_iga(model, build_iga_config(model, cfg), device=loaded.device, dtype=torch.float32)
     freeze_backbone_for_iga(model, train_lora=bool(train_cfg.get("train_lora", False)))
@@ -243,6 +252,9 @@ def main() -> None:
         "config_sha256": sha256_json(cfg),
         "risk_labels_computed": len(risk_label_cache),
         "risk_loss_weight": risk_loss_weight,
+        "lora_adapter_dir": args.lora_adapter_dir,
+        "lora_merged_for_iga": bool(args.lora_adapter_dir),
+        "phi_source": "lora_adapted_backbone" if args.lora_adapter_dir else "base_backbone",
         "package_versions": package_versions(),
     }
     json_dump(output_dir / "train_summary.json", summary)

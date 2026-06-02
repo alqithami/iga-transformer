@@ -1,0 +1,16 @@
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+transformers
+datasets
+accelerate
+safetensors
+sentencepiece
+protobuf
+tokenizers
+tqdm
+numpy
+pandas
+scikit-learn
+pyyaml
+psutil
+huggingface_hub[cli]
+peft
