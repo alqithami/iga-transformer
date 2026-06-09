@@ -1,5 +1,9 @@
 # Inhibitory-Gate Attention (IGA)
 
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![arXiv](https://img.shields.io/badge/arXiv-xxxx.XXXXX-b31b1b.svg)](https://arxiv.org/)
+
 This repository contains code for **Inhibitory-Gate Attention: Learned Negative Routing for Factual Calibration in Language Models**.
 
 Inhibitory-Gate Attention (IGA) is a frozen-backbone intervention for decoder-only language models. It learns a nonnegative attention-logit penalty and applies it before the attention softmax:
