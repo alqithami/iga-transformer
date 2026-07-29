@@ -4,9 +4,31 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "iga-llm"
-version = "0.2.0"
-description = "Reviewer-grade uncertainty-gated inhibitory attention pipeline for LLM factual calibration"
+version = "0.3.0"
+description = "Inhibitory-Gate Attention for constrained factual calibration in frozen language models"
+readme = "README.md"
 requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+  "torch>=2.2",
+  "transformers>=4.44",
+  "datasets>=2.18",
+  "accelerate>=0.30",
+  "safetensors>=0.4",
+  "sentencepiece>=0.2",
+  "protobuf>=4.25",
+  "tokenizers>=0.19",
+  "tqdm>=4.66",
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "scikit-learn>=1.3",
+  "PyYAML>=6.0",
+  "psutil>=5.9",
+  "huggingface-hub>=0.24",
+]
+
+[project.optional-dependencies]
+peft = ["peft>=0.12"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
