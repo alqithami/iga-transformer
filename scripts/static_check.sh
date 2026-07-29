@@ -29,10 +29,9 @@ if grep -RInE '/Users/[^/]+/|/root/|/home/[^/]+/' \
   exit 1
 fi
 
-if find . -path './.git' -prune -o -type f \
-  \( -name '*.pt' -o -name '*.pth' -o -name '*.bin' -o -name '*.safetensors' \) \
-  -print -quit | grep -q .; then
-  echo "Generated model state is present in the source tree." >&2
+tracked_model_state="$(git ls-files '*.pt' '*.pth' '*.bin' '*.safetensors' | head -n 1 || true)"
+if [[ -n "$tracked_model_state" ]]; then
+  echo "Generated model state is tracked: $tracked_model_state" >&2
   exit 1
 fi
 
