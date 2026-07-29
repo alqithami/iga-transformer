@@ -35,7 +35,6 @@ def _prepare_all(args: argparse.Namespace, data_dir: Path) -> dict[str, list[Pat
     ensure_dir(data_dir)
     split_seed = str(args.split_seed)
     load_limit = args.load_limit
-    # If not explicitly provided, load enough examples before hash splitting.
     if load_limit is None and args.limit_train:
         load_limit = max(args.limit_train * 4, args.limit_eval * 4, 100)
     prepared: dict[str, list[Path]] = {"train": [], "dev": [], "eval": []}
@@ -66,14 +65,12 @@ def _prepare_all(args: argparse.Namespace, data_dir: Path) -> dict[str, list[Pat
             cmd += ["--revision", args.dataset_revision]
         _run(cmd)
 
-    # TruthfulQA and HaluEval have a single split, so we hash-partition it.
     prep("truthfulqa_train", "truthfulqa_mc", "train", data_dir / "truthfulqa_train.jsonl", "validation", args.limit_train)
     prep("truthfulqa_dev", "truthfulqa_mc", "dev", data_dir / "truthfulqa_dev.jsonl", "validation", args.limit_dev)
     prep("truthfulqa_eval", "truthfulqa_mc", "test", data_dir / "truthfulqa_eval.jsonl", "validation", args.limit_eval)
     prep("halueval_train", "halueval", "train", data_dir / "halueval_train.jsonl", "data", args.limit_train, args.halueval_config)
     prep("halueval_dev", "halueval", "dev", data_dir / "halueval_dev.jsonl", "data", args.limit_dev, args.halueval_config)
     prep("halueval_eval", "halueval", "test", data_dir / "halueval_eval.jsonl", "data", args.limit_eval, args.halueval_config)
-    # FEVER: train/dev come from train, final eval from labelled_dev to avoid leakage.
     prep("fever_train", "fever", "train", data_dir / "fever_train.jsonl", "train", args.limit_train)
     prep("fever_dev", "fever", "dev", data_dir / "fever_dev.jsonl", "train", args.limit_dev)
     prep("fever_eval", "fever", "all", data_dir / "fever_eval.jsonl", "labelled_dev", args.limit_eval)
@@ -181,7 +178,7 @@ def _latency_one(config_path: Path, out_path: Path, method: str, seed: int, run_
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the full reviewer-grade IGA experiment matrix.")
+    parser = argparse.ArgumentParser(description="Run the complete IGA experiment matrix.")
     parser.add_argument("--configs", nargs="+", default=["configs/llama3_8b_iga.yaml"], help="One or more model YAML configs.")
     parser.add_argument("--out_dir", default=None)
     parser.add_argument("--seeds", nargs="+", type=int, default=[1, 2, 3])
@@ -258,74 +255,64 @@ def main() -> None:
         base_config_path = Path(config_in)
         base_cfg = load_yaml(base_config_path)
         model_tag = _config_name(base_config_path)
-        base_resolved = cfg_dir / f"{model_tag}.yaml"
-        write_yaml(base_resolved, base_cfg)
         for seed in args.seeds:
             run_id = f"{model_tag}_seed{seed}"
-            ckpt_dir = run_dir / run_id / "full_iga"
-            checkpoint = ckpt_dir / "iga_modules.pt"
+            resolved_path = cfg_dir / f"{run_id}.yaml"
+            cfg = dict(base_cfg)
+            cfg["seed"] = seed
+            write_yaml(resolved_path, cfg)
+            checkpoint_dir = run_dir / run_id / "full_iga"
+            checkpoint = checkpoint_dir / "iga_modules.pt"
             if not args.skip_training:
-                _train_one(base_resolved, train_mix, dev_mix, ckpt_dir, seed, args)
-            elif not checkpoint.exists():
-                checkpoint = None  # allow vanilla-only or inference-only runs
+                _train_one(resolved_path, train_mix, dev_mix, checkpoint_dir, seed, args)
+
             for data_path in eval_files:
-                bench_tag = data_path.stem.replace("_eval", "")
+                benchmark_tag = data_path.stem.replace("_eval", "")
                 for method in choice_methods:
-                    ckpt = checkpoint if method == "iga_mc" else None
-                    out = pred_dir / f"{run_id}_{bench_tag}_{method}.jsonl"
-                    _evaluate_one(base_resolved, data_path, out, method, seed, run_id, args, checkpoint=ckpt)
-                    prediction_files.append(str(out))
+                    out_path = pred_dir / f"{run_id}_{benchmark_tag}_{method}.jsonl"
+                    _evaluate_one(resolved_path, data_path, out_path, method, seed, run_id, args, checkpoint if method == "iga_mc" else None)
+                    prediction_files.append(str(out_path))
                 for method in generation_methods:
-                    ckpt = checkpoint if method == "iga_gen" else None
-                    out = pred_dir / f"{run_id}_{bench_tag}_{method}.jsonl"
-                    _evaluate_one(base_resolved, data_path, out, method, seed, run_id, args, checkpoint=ckpt)
-                    prediction_files.append(str(out))
+                    out_path = pred_dir / f"{run_id}_{benchmark_tag}_{method}.jsonl"
+                    _evaluate_one(resolved_path, data_path, out_path, method, seed, run_id, args, checkpoint if method == "iga_gen" else None)
+                    prediction_files.append(str(out_path))
+
             if not args.skip_latency:
                 for prompt_tokens in prompt_lengths:
-                    out_v = latency_dir / f"{run_id}_vanilla_{prompt_tokens}.jsonl"
-                    _latency_one(base_resolved, out_v, "vanilla", seed, run_id, args, prompt_tokens=prompt_tokens)
-                    latency_files.append(str(out_v))
-                    out_i = latency_dir / f"{run_id}_iga_{prompt_tokens}.jsonl"
-                    _latency_one(base_resolved, out_i, "iga", seed, run_id, args, checkpoint=checkpoint, prompt_tokens=prompt_tokens)
-                    latency_files.append(str(out_i))
-            manifest["runs"].append({"model_config": str(base_config_path), "seed": seed, "run_id": run_id, "checkpoint": str(checkpoint) if checkpoint else None})
+                    for method in ("vanilla", "iga"):
+                        out_path = latency_dir / f"{run_id}_{method}_{prompt_tokens}.jsonl"
+                        _latency_one(resolved_path, out_path, method, seed, run_id, args, checkpoint if method == "iga" else None, prompt_tokens)
+                        latency_files.append(str(out_path))
 
             if args.run_ablations:
-                for ab_name in [x.strip() for x in args.ablation_names.split(",") if x.strip()]:
-                    spec = get_ablation_by_name(ab_name)
-                    if spec is None:
-                        raise ValueError(f"Unknown ablation: {ab_name}")
-                    ab_cfg = ablation_config(base_cfg, spec)
-                    ab_cfg_path = cfg_dir / f"{model_tag}_{ab_name}.yaml"
-                    write_yaml(ab_cfg_path, ab_cfg)
-                    ab_run_id = f"{model_tag}_seed{seed}_{ab_name}"
-                    ab_ckpt_dir = run_dir / run_id / ab_name
-                    ab_ckpt = ab_ckpt_dir / "iga_modules.pt" if spec.train else None
-                    # Reuse full checkpoint for ablate_full_iga to avoid duplicate training.
-                    if ab_name == "ablate_full_iga":
-                        ab_ckpt = checkpoint
-                    elif spec.train and not args.skip_training:
-                        _train_one(ab_cfg_path, train_mix, dev_mix, ab_ckpt_dir, seed, args)
+                for name in [n.strip() for n in args.ablation_names.split(",") if n.strip()]:
+                    spec = get_ablation_by_name(name)
+                    ab_cfg = ablation_config(cfg, spec)
+                    ab_path = cfg_dir / f"{run_id}_{name}.yaml"
+                    write_yaml(ab_path, ab_cfg)
+                    ab_ckpt_dir = run_dir / run_id / name
+                    ab_ckpt = ab_ckpt_dir / "iga_modules.pt" if spec.train else checkpoint
+                    if spec.train and not args.skip_training:
+                        _train_one(ab_path, train_mix, dev_mix, ab_ckpt_dir, seed, args)
                     for data_path in eval_files:
-                        bench_tag = data_path.stem.replace("_eval", "")
-                        out = pred_dir / f"{ab_run_id}_{bench_tag}.jsonl"
-                        _evaluate_one(ab_cfg_path, data_path, out, "iga_mc", seed, ab_run_id, args, checkpoint=ab_ckpt, report_method=ab_name)
-                        prediction_files.append(str(out))
+                        benchmark_tag = data_path.stem.replace("_eval", "")
+                        out_path = pred_dir / f"{run_id}_{benchmark_tag}_{name}.jsonl"
+                        _evaluate_one(ab_path, data_path, out_path, "iga_mc", seed, run_id, args, ab_ckpt, report_method=name)
+                        prediction_files.append(str(out_path))
 
+            manifest["runs"].append({"run_id": run_id, "config": str(resolved_path), "config_sha256": sha256_json(cfg)})
+
+    report_cmd = [sys.executable, "-m", "iga_llm.report", "--out_dir", str(aggregate_dir)]
+    if prediction_files:
+        report_cmd += ["--predictions", *prediction_files]
+    if latency_files:
+        report_cmd += ["--latency", *latency_files]
+    _run(report_cmd)
+
+    manifest["prediction_files"] = prediction_files
+    manifest["latency_files"] = latency_files
     json_dump(root / "matrix_manifest.json", manifest)
-    _run([
-        sys.executable,
-        "-m",
-        "iga_llm.report",
-        "--out_dir",
-        str(aggregate_dir),
-        "--predictions",
-        *prediction_files,
-        "--latency",
-        *latency_files,
-    ])
-    print(f"\nComplete. Results root: {root}")
-    print(f"Aggregate tables: {aggregate_dir}")
+    print(f"\nCompleted matrix: {root}")
 
 
 if __name__ == "__main__":
