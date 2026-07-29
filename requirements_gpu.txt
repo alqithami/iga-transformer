@@ -1,16 +1,20 @@
-torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-transformers
-datasets
-accelerate
-safetensors
-sentencepiece
-protobuf
-tokenizers
-tqdm
-numpy
-pandas
-scikit-learn
-pyyaml
-psutil
-huggingface_hub[cli]
-peft
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
+transformers==5.9.0
+datasets==4.8.5
+accelerate==1.13.0
+peft==0.19.1
+safetensors>=0.4,<1
+sentencepiece>=0.2,<1
+protobuf>=4.25,<7
+tokenizers>=0.20,<1
+tqdm>=4.66,<5
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.8.0
+PyYAML>=6.0,<7
+psutil>=5.9,<8
+huggingface-hub>=0.30,<2
