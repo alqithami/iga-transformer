@@ -36,4 +36,11 @@ if [[ -n "$tracked_model_state" ]]; then
   exit 1
 fi
 
+tracked_generated="$(git ls-files 'results/**' 'runs/**' 'logs/**' 'data/**' || true)"
+if [[ -n "$tracked_generated" ]]; then
+  echo "Generated experiment files are tracked:" >&2
+  printf '%s\n' "$tracked_generated" >&2
+  exit 1
+fi
+
 echo "Static checks passed."
