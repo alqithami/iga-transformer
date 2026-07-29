@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/.."
-source .env.mac_m4 2>/dev/null || true
-export PYTHONPATH="$(pwd)/src:${PYTHONPATH:-}"
+
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+
 mkdir -p data runs results/smoke
-python -m iga_llm.prepare_data --benchmark synthetic --out data/synthetic.jsonl
-python -m iga_llm.train \
+"$PYTHON_BIN" -m iga_llm.prepare_data --benchmark synthetic --out data/synthetic.jsonl
+"$PYTHON_BIN" -m iga_llm.train \
   --config configs/tiny_debug.yaml \
   --train_jsonl data/synthetic.jsonl \
   --dev_jsonl data/synthetic.jsonl \
@@ -13,7 +13,7 @@ python -m iga_llm.train \
   --epochs 1 \
   --limit 2 \
   --print_every 1
-python -m iga_llm.evaluate \
+"$PYTHON_BIN" -m iga_llm.evaluate \
   --config configs/tiny_debug.yaml \
   --data data/synthetic.jsonl \
   --out results/smoke/vanilla_mc.jsonl \
@@ -21,7 +21,7 @@ python -m iga_llm.evaluate \
   --run_id smoke \
   --seed 1 \
   --limit 3
-python -m iga_llm.evaluate \
+"$PYTHON_BIN" -m iga_llm.evaluate \
   --config configs/tiny_debug.yaml \
   --data data/synthetic.jsonl \
   --out results/smoke/iga_mc.jsonl \
@@ -30,7 +30,7 @@ python -m iga_llm.evaluate \
   --run_id smoke \
   --seed 1 \
   --limit 3
-python -m iga_llm.benchmark_latency \
+"$PYTHON_BIN" -m iga_llm.benchmark_latency \
   --config configs/tiny_debug.yaml \
   --method vanilla \
   --out results/smoke/latency_vanilla.jsonl \
@@ -38,7 +38,7 @@ python -m iga_llm.benchmark_latency \
   --max_new_tokens 4 \
   --warmup 0 \
   --runs 1
-python -m iga_llm.report \
+"$PYTHON_BIN" -m iga_llm.report \
   --out_dir results/smoke/aggregate \
   --predictions results/smoke/vanilla_mc.jsonl results/smoke/iga_mc.jsonl \
   --latency results/smoke/latency_vanilla.jsonl

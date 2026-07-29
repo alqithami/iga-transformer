@@ -181,7 +181,7 @@ def _latency_one(config_path: Path, out_path: Path, method: str, seed: int, run_
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the full reviewer-grade IGA experiment matrix.")
+    parser = argparse.ArgumentParser(description="Run the complete IGA experiment matrix.")
     parser.add_argument("--configs", nargs="+", default=["configs/llama3_8b_iga.yaml"], help="One or more model YAML configs.")
     parser.add_argument("--out_dir", default=None)
     parser.add_argument("--seeds", nargs="+", type=int, default=[1, 2, 3])

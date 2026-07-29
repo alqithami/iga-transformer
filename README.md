@@ -1,37 +1,39 @@
-# Inhibitory-Gate Attention (IGA)
+# Inhibitory-Gate Attention
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![arXiv](https://img.shields.io/badge/arXiv-xxxx.XXXXX-b31b1b.svg)](https://arxiv.org/)
-
-This repository contains code for **Inhibitory-Gate Attention: Learned Negative Routing for Factual Calibration in Language Models**.
-
-Inhibitory-Gate Attention (IGA) is a frozen-backbone intervention for decoder-only language models. It learns a nonnegative attention-logit penalty and applies it before the attention softmax:
+Inhibitory-Gate Attention (IGA) is a constrained attention controller for decoder-only language models. It augments a frozen transformer with a learned nonnegative edge-cost field and subtracts that field from the attention logits before row-wise normalization:
 
 ```text
 A' = softmax(S - Gamma),   Gamma >= 0
 ```
 
-The main implementation is dense low-rank IGA, where a factorized query-key penalty is scaled by a row-wise uncertainty gate. The repository also includes sparse inhibition, risk-gate diagnostics, LoRA and LoRA+IGA composition workflows, choice-shuffle audits, higher-sample self-consistency diagnostics, DoLa generation-harness evaluation, and reporting utilities.
+The principal implementation uses low-rank query--key interactions and a row-wise uncertainty gate. The codebase also provides sparse inhibition, learned-risk diagnostics, LoRA baselines, LoRA+IGA composition, choice-order audits, higher-sample self-consistency evaluation, latency measurement, and result aggregation.
 
-## Repository scope
+## Scope
 
-The repository provides source code, configuration files, and scripts for reproducing the experimental workflow. It does not include pretrained model weights, trained adapter checkpoints, benchmark corpora, or large generated result directories. Those assets should be generated locally or stored outside version control.
+The repository contains source code, experiment configurations, data-preparation utilities, and analysis scripts. Pretrained model weights, trained IGA checkpoints, LoRA adapters, benchmark corpora, and generated result directories are not versioned.
 
-## Repository layout
+The experimental protocol covers:
+
+- Mistral-7B-Instruct-v0.3
+- Llama-3-8B-Instruct
+- Qwen2.5-7B-Instruct
+- TruthfulQA-MC1, FEVER, and HaluEval-QA
+- factual accuracy, ECE, Brier score, AURC, selective prediction, latency, and inhibitory-controller diagnostics
+
+## Repository structure
 
 ```text
-configs/                 Model and experiment configuration files
-scripts/                 Experiment, audit, bootstrap, and utility scripts
-src/iga_llm/             IGA package source code
-docs/                    Reproducibility and artifact documentation
-pyproject.toml           Python package metadata
-requirements_gpu.txt     GPU environment requirements
+configs/                 Model and experiment configurations
+scripts/                 Reproduction, evaluation, and analysis commands
+src/iga_llm/             Python package
+docs/                    Protocol and artifact documentation
+pyproject.toml            Package metadata
+requirements_gpu.txt      Tested CUDA environment
 ```
 
 ## Installation
 
-Create and activate a Python environment, then install the package in editable mode.
+Python 3.10 or later is required. The reference GPU environment uses PyTorch 2.5.1 with CUDA 12.1.
 
 ```bash
 python -m venv .venv
@@ -41,135 +43,109 @@ python -m pip install -r requirements_gpu.txt
 python -m pip install -e .
 ```
 
-For gated Hugging Face models, authenticate before running experiments.
+Authenticate with Hugging Face before using gated checkpoints:
 
 ```bash
 hf auth login
 ```
 
-The GPU experiments used CUDA-capable hardware with bfloat16 support. The smoke test can run on smaller devices because it uses a tiny model and synthetic data.
-
 ## Smoke test
+
+The smoke test uses a tiny model and synthetic examples. It verifies data preparation, IGA installation, training, choice evaluation, latency measurement, and reporting.
 
 ```bash
 bash scripts/run_smoke.sh
 ```
 
-The smoke test verifies that data loading, IGA installation, training, evaluation, latency measurement, and reporting execute successfully on a minimal example.
+Expected outputs are written under `results/smoke/`.
 
-## Data protocol
+## Data preparation
 
-The pipeline works with deterministic JSONL splits and manifests for:
+The full matrix runner creates deterministic JSONL splits and manifests. TruthfulQA-MC1 and HaluEval-QA are hash-partitioned; FEVER training/development examples are drawn from the training split and final evaluation examples from `labelled_dev`.
 
-- TruthfulQA-MC1
-- FEVER
-- HaluEval-QA
+```bash
+python -m iga_llm.run_matrix \
+  --configs configs/mistral_7b_iga_lowrank_g2_tau035.yaml \
+  --out_dir results/paper_data \
+  --seeds 1 \
+  --limit_train 1000 \
+  --limit_dev 300 \
+  --limit_eval 300 \
+  --skip_training \
+  --skip_generation \
+  --skip_latency
+```
 
-Training uses a calibration mixture built from train/development partitions. Final metrics are computed on held-out evaluation partitions. FEVER is loaded through JSONL sources to avoid deprecated dataset-script behavior. Split files and manifests are written under each run directory.
+This command prepares:
 
-## Core workflow
+```text
+results/paper_data/data/calibration_train_mix.jsonl
+results/paper_data/data/calibration_dev_mix.jsonl
+results/paper_data/data/truthfulqa_eval.jsonl
+results/paper_data/data/fever_eval.jsonl
+results/paper_data/data/halueval_eval.jsonl
+```
 
-### Dense IGA training and evaluation
+The experiment scripts accept `DATA_ROOT` to identify the directory containing these files:
 
-The main training entry point is:
+```bash
+export DATA_ROOT="$PWD/results/paper_data"
+```
+
+## Dense IGA
+
+Run one Qwen seed:
+
+```bash
+DATA_ROOT="$PWD/results/paper_data" bash scripts/run_qwen_dense_seed.sh 1
+```
+
+Run seeds 1--3, then aggregate one complete result directory per seed:
+
+```bash
+for seed in 1 2 3; do
+  DATA_ROOT="$PWD/results/paper_data" bash scripts/run_qwen_dense_seed.sh "$seed"
+done
+bash scripts/aggregate_qwen_three_seed.sh
+```
+
+The underlying entry points are also available directly:
 
 ```bash
 python -m iga_llm.train \
-  --config <config.yaml> \
-  --train_jsonl <calibration_train_mix.jsonl> \
-  --dev_jsonl <calibration_dev_mix.jsonl> \
-  --output_dir <run_dir> \
-  --seed <seed> \
+  --config configs/qwen2_5_7b_iga_lowrank_g2_tau035_matched_bf16.yaml \
+  --train_jsonl "$DATA_ROOT/data/calibration_train_mix.jsonl" \
+  --dev_jsonl "$DATA_ROOT/data/calibration_dev_mix.jsonl" \
+  --output_dir results/qwen_seed1/run \
+  --seed 1 \
   --epochs 1
-```
 
-Choice evaluation is run with:
-
-```bash
 python -m iga_llm.evaluate \
-  --config <config.yaml> \
-  --data <eval.jsonl> \
-  --out <predictions.jsonl> \
+  --config configs/qwen2_5_7b_iga_lowrank_g2_tau035_matched_bf16.yaml \
+  --data "$DATA_ROOT/data/truthfulqa_eval.jsonl" \
+  --out results/qwen_seed1/predictions/truthfulqa_iga.jsonl \
   --method iga_mc \
-  --iga_checkpoint <run_dir>/iga_modules.pt \
-  --seed <seed> \
-  --run_id <run_id>
-```
-
-Supported choice-mode methods include:
-
-```text
-vanilla_mc
-temperature_mc
-semantic_entropy_mc
-self_consistency_mc
-iga_mc
-```
-
-### Reporting
-
-Aggregate prediction JSONL files with:
-
-```bash
-python -m iga_llm.report \
-  --out_dir <aggregate_out> \
-  --predictions <prediction_files...>
-```
-
-The report module writes:
-
-```text
-summary_per_seed.csv
-summary_by_model_benchmark_method.csv
-calibration_bins.csv
-paired_deltas_vs_vanilla.csv
-paired_delta_summary.csv
-main_results_table.tex
-ablation_table.tex
-latency_summary.csv
-efficiency_table.tex
-REPORT.json
-```
-
-## Qwen dense IGA workflow
-
-Run the three dense Qwen seeds:
-
-```bash
-bash scripts/run_qwen_dense_seed.sh 1
-bash scripts/run_qwen_dense_seed.sh 2
-bash scripts/run_qwen_dense_seed.sh 3
-```
-
-Aggregate the three-seed Qwen matrix:
-
-```bash
-bash scripts/aggregate_qwen_three_seed.sh
+  --iga_checkpoint results/qwen_seed1/run/iga_modules.pt \
+  --seed 1 \
+  --run_id qwen_seed1
 ```
 
 ## LoRA and LoRA+IGA composition
 
-The composition workflow loads a trained LoRA adapter, merges and freezes it into the backbone, and trains only the IGA controller on top of the LoRA-adapted model. In this setting, the entropy gate is computed from the LoRA-adapted model.
-
-Run the Qwen LoRA baseline:
+The composition pipeline merges a trained LoRA adapter into the backbone, freezes the adapted model, and trains only IGA. The entropy gate is therefore computed from the LoRA-adapted model.
 
 ```bash
-bash scripts/run_qwen_lora_fixed_pipeline.sh
+DATA_ROOT="$PWD/results/paper_data" bash scripts/run_qwen_lora_fixed_pipeline.sh
+DATA_ROOT="$PWD/results/paper_data" bash scripts/run_qwen_lora_plus_iga_three_seeds.sh
 ```
 
-Run Qwen LoRA+IGA composition:
-
-```bash
-bash scripts/run_qwen_lora_plus_iga_three_seeds.sh
-```
-
-For Mistral, train LoRA adapters with `scripts/train_lora_choice.py`, then run the LoRA+IGA diagnostic one seed at a time:
+For Mistral, train a rank-2 LoRA adapter and then run the composition diagnostic:
 
 ```bash
 python scripts/train_lora_choice.py \
   --model_id mistralai/Mistral-7B-Instruct-v0.3 \
-  --train_jsonl results/mistral_full_generation_20260507_234820/data/calibration_train_mix.jsonl \
-  --dev_jsonl results/mistral_full_generation_20260507_234820/data/calibration_dev_mix.jsonl \
+  --train_jsonl "$DATA_ROOT/data/calibration_train_mix.jsonl" \
+  --dev_jsonl "$DATA_ROOT/data/calibration_dev_mix.jsonl" \
   --output_dir results/mistral_7b_lora_matched/seed1/run \
   --seed 1 \
   --epochs 1 \
@@ -178,62 +154,99 @@ python scripts/train_lora_choice.py \
   --target_modules q_proj,v_proj,o_proj \
   --dtype bfloat16
 
-bash scripts/run_mistral_lora_plus_iga_one_seed.sh 1
+DATA_ROOT="$PWD/results/paper_data" bash scripts/run_mistral_lora_plus_iga_one_seed.sh 1
 ```
 
-## Analysis utilities
+Each composition training summary records `lora_merged_for_iga`, `phi_source`, and `risk_labels_computed` so the composition path can be audited.
 
-### Selective prediction and no-HaluEval diagnostics
+## Additional evaluations
+
+Choice-order audit:
+
+```bash
+DATA_ROOT="$PWD/results/paper_data" bash scripts/run_qwen_choice_shuffle_audit.sh
+```
+
+Twenty-sample self-consistency diagnostic:
+
+```bash
+DATA_ROOT="$PWD/results/paper_data" bash scripts/resume_qwen_sc20.sh
+```
+
+Generation-mode DoLa harness:
+
+```bash
+python scripts/evaluate_custom_dola_gen.py --help
+```
+
+The DoLa script is a generation-harness diagnostic; it is not a matched choice-likelihood implementation.
+
+## Analysis and reporting
+
+Aggregate prediction files:
+
+```bash
+python -m iga_llm.report \
+  --out_dir results/aggregate \
+  --predictions results/**/predictions/*.jsonl
+```
+
+The report module writes per-seed and aggregate CSV files, calibration bins, paired deltas, latency summaries, JSON manifests, and LaTeX tables.
+
+Selective-prediction and no-HaluEval diagnostics:
 
 ```bash
 python scripts/reviewer_risk_checks.py \
-  --out_dir <diagnostic_out> \
-  --predictions <prediction_files...>
+  --out_dir results/diagnostics \
+  --predictions <prediction-files...>
 ```
 
-This script reports pooled accuracy, ECE10, AURC, accuracy at fixed coverage, and a no-HaluEval aggregate.
-
-### Paired bootstrap
+Paired bootstrap comparison:
 
 ```bash
 python scripts/bootstrap_two_methods.py \
-  --a_label <method_a> \
-  --b_label <method_b> \
-  --a <method_a_prediction_files...> \
-  --b <method_b_prediction_files...> \
-  --out <bootstrap.csv>
+  --a_label method_a \
+  --b_label method_b \
+  --a <method-a-files...> \
+  --b <method-b-files...> \
+  --out results/diagnostics/bootstrap.csv
 ```
 
-### Choice-shuffle audit
+## Reproducibility checks
 
 ```bash
-bash scripts/run_qwen_choice_shuffle_audit.sh
+bash scripts/static_check.sh
 ```
 
-The shuffle audit evaluates robustness to answer-order artifacts by deterministically permuting answer choices and recomputing choice likelihoods.
+The check compiles Python sources, validates shell syntax, parses YAML configurations, and scans tracked source files for common machine-specific paths and generated binary artifacts.
 
-### Higher-sample self-consistency
-
-```bash
-bash scripts/resume_qwen_sc20.sh
-```
-
-This workflow evaluates a 20-sample Qwen self-consistency diagnostic and resumes missing or incomplete files when interrupted.
+Further protocol details are provided in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) and [`docs/RESULTS_ARTIFACTS.md`](docs/RESULTS_ARTIFACTS.md).
 
 ## Generated artifacts
 
-Generated results are intentionally kept outside version control. Typical generated artifacts include:
+The repository excludes generated outputs and model state:
 
 ```text
-results/**/predictions/*.jsonl
-results/**/aggregate/*.csv
-results/**/aggregate/*.json
-runs/**/iga_modules.pt
+results/
+runs/
+logs/
+*.pt
+*.pth
+*.bin
+*.safetensors
 **/lora_adapter/
 ```
 
-The repository `.gitignore` excludes model weights, adapter checkpoints, and large generated outputs.
+A source-only archive can be created with:
+
+```bash
+bash scripts/export_source_artifact.sh
+```
+
+## License
+
+The software is released under the MIT License. See [`LICENSE`](LICENSE).
 
 ## Citation
 
-If this code is used in academic work, cite the accompanying paper and the upstream datasets and model checkpoints used in the experiments.
+Please cite the accompanying paper and the original model and benchmark publications when using this implementation.
