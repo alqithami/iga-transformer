@@ -1,25 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd ~/IGA_GPU
-source .venv/bin/activate
+
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+require_paper_data
+
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
 export TOKENIZERS_PARALLELISM=false
 export TRANSFORMERS_VERBOSITY=error
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-export BASE_OUT="${BASE_OUT:-results/mistral_full_generation_20260507_234820}"
-export QWEN_CFG="${QWEN_CFG:-configs/qwen2_5_7b_iga_lowrank_g2_tau035_matched_bf16.yaml}"
-export MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-7B-Instruct}"
+
+QWEN_CFG="${QWEN_CFG:-configs/qwen2_5_7b_iga_lowrank_g2_tau035_matched_bf16.yaml}"
+MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-7B-Instruct}"
+SEEDS="${SEEDS:-1 2 3}"
+require_file "$QWEN_CFG"
 mkdir -p logs
-for SEED in 1 2 3; do
-  RUN_ROOT="results/qwen2_5_7b_lora_matched/seed${SEED}"
-  RUN_NAME="qwen2_5_7b_lora_matched_seed${SEED}"
-  mkdir -p "$RUN_ROOT/run" "$RUN_ROOT/predictions" "$RUN_ROOT/aggregate"
-  python scripts/run_lora_choice.py train \
+
+for seed in $SEEDS; do
+  run_root="results/qwen2_5_7b_lora_matched/seed${seed}"
+  run_name="qwen2_5_7b_lora_matched_seed${seed}"
+  mkdir -p "$run_root/run" "$run_root/predictions" "$run_root/aggregate"
+
+  "$PYTHON_BIN" scripts/run_lora_choice.py train \
     --config "$QWEN_CFG" \
-    --train_jsonl "$BASE_OUT/data/calibration_train_mix.jsonl" \
-    --dev_jsonl "$BASE_OUT/data/calibration_dev_mix.jsonl" \
-    --output_dir "$RUN_ROOT/run" \
-    --seed "$SEED" \
+    --train_jsonl "$DATA_ROOT/data/calibration_train_mix.jsonl" \
+    --dev_jsonl "$DATA_ROOT/data/calibration_dev_mix.jsonl" \
+    --output_dir "$run_root/run" \
+    --seed "$seed" \
     --epochs 1 \
     --lr 0.0001 \
     --max_length 768 \
@@ -27,34 +33,34 @@ for SEED in 1 2 3; do
     --lora_alpha 4 \
     --target_modules q_proj,v_proj,o_proj \
     --max_trainable 2000000 \
-    2>&1 | tee "logs/qwen_lora_seed${SEED}_train_$(date +%Y%m%d_%H%M%S).log"
-  FIXED_ROOT="results/qwen2_5_7b_lora_fixed_eval/seed${SEED}"
-  mkdir -p "$FIXED_ROOT/predictions"
-  for BENCH in truthfulqa fever halueval; do
-    python scripts/evaluate_lora_choice_fixed.py \
+    2>&1 | tee "logs/qwen_lora_seed${seed}_train_$(date +%Y%m%d_%H%M%S).log"
+
+  require_dir "$run_root/run/lora_adapter"
+  fixed_root="results/qwen2_5_7b_lora_fixed_eval/seed${seed}"
+  mkdir -p "$fixed_root/predictions"
+  for benchmark in truthfulqa fever halueval; do
+    "$PYTHON_BIN" scripts/evaluate_lora_choice_fixed.py \
       --model_id "$MODEL_ID" \
-      --adapter_dir "$RUN_ROOT/run/lora_adapter" \
-      --data "$BASE_OUT/data/${BENCH}_eval.jsonl" \
-      --out "$FIXED_ROOT/predictions/${RUN_NAME}_${BENCH}_lora_mc.jsonl" \
-      --seed "$SEED" \
-      --run_id "$RUN_NAME" \
+      --adapter_dir "$run_root/run/lora_adapter" \
+      --data "$DATA_ROOT/data/${benchmark}_eval.jsonl" \
+      --out "$fixed_root/predictions/${run_name}_${benchmark}_lora_mc.jsonl" \
+      --seed "$seed" \
+      --run_id "$run_name" \
       --method lora_mc \
       --dtype bfloat16
   done
-  python scripts/audit_prediction_nans.py "$FIXED_ROOT"/predictions/*.jsonl
-  python -m iga_llm.report --out_dir "$FIXED_ROOT/aggregate" --predictions "$FIXED_ROOT"/predictions/*.jsonl
+  "$PYTHON_BIN" scripts/audit_prediction_nans.py "$fixed_root"/predictions/*.jsonl
+  "$PYTHON_BIN" -m iga_llm.report --out_dir "$fixed_root/aggregate" --predictions "$fixed_root"/predictions/*.jsonl
 done
-python - <<'PY'
+
+"$PYTHON_BIN" - <<'PY'
 from pathlib import Path
 import subprocess, sys
-out = Path('results/qwen2_5_7b_lora_fixed_compare')
-agg = out / 'aggregate'
-agg.mkdir(parents=True, exist_ok=True)
-files = []
-for root in sorted(Path('results').glob('qwen2_5_7b_lowrank_g2_matched_seed*')):
-    files.extend(sorted((root / 'predictions').glob('*.jsonl')))
-files.extend(sorted(Path('results/qwen2_5_7b_lora_fixed_eval').glob('seed*/predictions/*.jsonl')))
-seen=set(); files=[f for f in files if not (str(f) in seen or seen.add(str(f)))]
-subprocess.run([sys.executable, '-m', 'iga_llm.report', '--out_dir', str(agg), '--predictions', *map(str, files)], check=True)
-print('Wrote', agg)
+files = sorted(Path("results/qwen2_5_7b_lora_fixed_eval").glob("seed*/predictions/*.jsonl"))
+if len(files) != 9:
+    raise SystemExit(f"Expected 9 LoRA evaluation files, found {len(files)}")
+out = Path("results/qwen2_5_7b_lora_fixed_compare/aggregate")
+out.mkdir(parents=True, exist_ok=True)
+subprocess.run([sys.executable, "-m", "iga_llm.report", "--out_dir", str(out), "--predictions", *map(str, files)], check=True)
+print(f"Wrote {out}")
 PY
