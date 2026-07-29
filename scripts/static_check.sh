@@ -29,9 +29,17 @@ if grep -RInE '/Users/[^/]+/|/root/|/home/[^/]+/' \
   exit 1
 fi
 
-tracked_model_state="$(git ls-files '*.pt' '*.pth' '*.bin' '*.safetensors' | head -n 1 || true)"
+tracked_model_state="$(git ls-files '*.pt' '*.pth' '*.bin' '*.safetensors' || true)"
 if [[ -n "$tracked_model_state" ]]; then
-  echo "Generated model state is tracked: $tracked_model_state" >&2
+  echo "Generated model state is tracked:" >&2
+  printf '%s\n' "$tracked_model_state" >&2
+  exit 1
+fi
+
+tracked_generated="$(git ls-files 'results/**' 'runs/**' 'logs/**' 'data/**' || true)"
+if [[ -n "$tracked_generated" ]]; then
+  echo "Generated experiment files are tracked:" >&2
+  printf '%s\n' "$tracked_generated" >&2
   exit 1
 fi
 
