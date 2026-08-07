@@ -246,7 +246,3 @@ bash scripts/export_source_artifact.sh
 ## License
 
 The software is released under the MIT License. See [`LICENSE`](LICENSE).
-
-## Citation
-
-Please cite the accompanying paper and the original model and benchmark publications when using this implementation.
