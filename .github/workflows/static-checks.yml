@@ -25,3 +25,6 @@ jobs:
 
       - name: Run static checks
         run: bash scripts/static_check.sh
+
+      - name: Check published error-transition analysis
+        run: python -m unittest discover -s tests -p 'test_error_transitions_publication.py' -v

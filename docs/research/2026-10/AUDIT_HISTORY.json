@@ -1,0 +1,53 @@
+{
+  "publication_scope": "Transcribed historical audit summaries, not newly rerun audits",
+  "coverage_validity_review_20261018": {
+    "archive_payloads": 278,
+    "trained_checkpoints_loaded": 12,
+    "logged_optimizer_updates": 36000,
+    "prediction_records_reconstructed": 19200,
+    "temperatures_refitted": 12,
+    "intervals_recomputed": 30,
+    "training_probe_records": 7680,
+    "historical_source_files": 82,
+    "gpu_replay_checkpoints": 12,
+    "gpu_replay_condition_records": 96,
+    "gpu_replay_semantic_vectors": 576,
+    "gpu_verification_optimizer_steps": 0,
+    "entire_training_reexecuted": false,
+    "passed": true
+  },
+  "replication_review_20261020": {
+    "audit_utc": "2026-10-20T05:13:57.783949+00:00",
+    "archive_payloads": 390,
+    "saved_states_loaded_and_hashed": 18,
+    "logged_new_updates": 18000,
+    "fresh_prediction_records_recomputed": 50400,
+    "independent_temperature_refits": 18,
+    "paired_intervals_reproduced": 66,
+    "historical_source_files": 88,
+    "original_target_rows": 13000,
+    "phase_freezes_verified": true,
+    "shared_first750_updates_verified": true,
+    "new_training": false,
+    "new_model_inference": false,
+    "passed": true,
+    "limitation": "Record/source/hash audit, not independent replay of every optimizer update or model forward"
+  },
+  "error_analysis_20261021": {
+    "executed_audit_utc": "2026-10-21T16:40:51.718482+00:00",
+    "archive_payloads_rehashed": 390,
+    "confirmation_predictions_reconstructed": 43200,
+    "example_transition_records": 28800,
+    "pairwise_bootstrap_panels": 6,
+    "bootstrap_draws_per_panel": 20000,
+    "source_program_sha256": "167a5f60be62e964f6c3b8d6b5d76e3efa3a0e99f889a94910b72b575987967a",
+    "historical_program_included_in_this_commit": false,
+    "new_model_forwards": 0,
+    "new_training_updates": 0,
+    "source_labels_modified": false,
+    "manuscript_modified": false,
+    "transition_partition_and_accuracy_identities_checked": true,
+    "passed": true
+  },
+  "record_count_warning": "The audits overlap; reused model/source observations are not independent experimental replicates"
+}

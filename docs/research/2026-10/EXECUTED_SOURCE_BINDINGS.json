@@ -1,0 +1,15 @@
+{
+  "scope": "Recorded executed module identities; training modules are not synchronized by this documentation/analysis commit",
+  "prepared_modules_compared": 7,
+  "verified_against_live_and_archived_protocol": true,
+  "historical_check_passed": true,
+  "module_sha256": {
+    "analyze.py": "0e21a8ac8e7002d1ab6de5946363ebd6bef0f976bf34cd70d99ecd03e3b5e472",
+    "core.py": "20a999d1fe250e0fcc5925dc1fc7ff49ddedc3beb4416a27347dea165e3dde4e",
+    "prepare.py": "304ee43fa08822a8f0c27c807d43cc67ace3aeb66048e31a6482b3f843727f2f",
+    "score.py": "dd04297d248b49f0bc46e2717fd65e9ed814145d8b78929af2381d3f5b73c466",
+    "supervisor.py": "de3605d8abcdf40045f7ca7e6b31cb096b9af0a5b6576b1376804b85c04ac0a2",
+    "test_components.py": "5186282d87d2695ee51ceaf4b954bbcb989e75ba740324220c1d7eb8c6359926",
+    "worker.py": "a703667fd81585677edff6f32fdc39fc1630205af0e2180eb9d4e260ba0c3304"
+  }
+}
